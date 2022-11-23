@@ -22,6 +22,15 @@ typedef struct PackerProblem {
 };
 
 
+void check_int(string* s) {
+	for (auto ch : *s) {
+		if (isdigit(ch) == 0) {
+			cout << "Illegal charchter \"" << ch << "\" detected in stream.Only integers allowed.";
+			exit(3);
+		}
+	}
+}
+
 PackerProblem* loadPackerProblem(string filename) {
 	PackerProblem container;
 	ifstream file(filename);
@@ -32,10 +41,11 @@ PackerProblem* loadPackerProblem(string filename) {
 
 	//Reading and proof-checking the first line of the file
 	getline(file, newLine);
+
 	cout << "Loading file: " << newLine << endl;
 
-	
-	if (newLine.length() < 5 || (int)newLine[0] < 65) {
+	//The first line of the file should be of a specific length and start with a char
+	if (newLine.length() < 5 || isdigit(newLine[0]) > 0) {
 		cout << "The file is currupted." << endl;
 		cout << "The first line of the file is incorrect." << endl;
 		exit(3);
@@ -44,31 +54,34 @@ PackerProblem* loadPackerProblem(string filename) {
 	//Reading and initiating main class with number of boxes and size of the cont
 	
 	
-	try {
-		getline(file, newLine, ' ');
-		container.width = stoi(newLine);
+	
+	getline(file, newLine, ' ');
+	check_int(&newLine);
+	container.width = stoi(newLine);
 		
-		getline(file, newLine, '\n');
-		container.length = stoi(newLine);
+	getline(file, newLine, '\n');
+	check_int(&newLine);
+	container.length = stoi(newLine);
 
-		getline(file, newLine);
-		container.numberOfBoxes = stoi(newLine);
+	getline(file, newLine);
+	check_int(&newLine);
+	container.numberOfBoxes = stoi(newLine);
 
-		areaContainer = container.width * container.length;
-	}
-	catch (const std::invalid_argument& ex) {
-		cout << "The numerical size of a contaner/box is currupted." << endl;
-		exit(3);
-	}
+	areaContainer = container.width * container.length;
+	
+	
 	
 	//Reading and initiating box sizes and their names
 	while (file.good()) {
 		getline(file, newLine, ' ');
+		check_int(&newLine);
 		container.boxes[counter].length = stoi(newLine);
 
 		getline(file, newLine, ' ');
+		check_int(&newLine);
 		container.boxes[counter].width = stoi(newLine);
 
+		//No input checks for the name. We expect any char.
 		getline(file, newLine, '\n');
 		container.boxes[counter].name = newLine[0];
 
@@ -136,14 +149,14 @@ int compare(const void* a, const void* b) {
 
 int main() {
 	
-	box a = { 1,2,3 };
+	
 	
 	PackerProblem* pC = loadPackerProblem("input.txt");
 
-	qsort(pC->boxes, pC->numberOfBoxes, sizeof(pC->boxes[0]), compare);
+	/*qsort(pC->boxes, pC->numberOfBoxes, sizeof(pC->boxes[0]), compare);*/
 
 	cout << sizeof(pC->boxes[0]);
-
+	
 	
 }
 //TODO Ask Questions: 1. typedef? 2.returning address of a local variable(loadpackerPrblem). 3. Quicksort. 4.Iterate each input with for-loop matching ASCII? RegEx? 5. doesn't hueristics oppose the "find all solutions" additional requirement 6. Function to print the box configurations and the container in the PackerProblem DS
