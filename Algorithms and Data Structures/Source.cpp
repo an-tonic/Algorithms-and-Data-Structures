@@ -6,7 +6,7 @@
 
 using namespace std;
 
-struct box {
+typedef struct box {
 	unsigned char width;
 	unsigned char length;
 	unsigned char name;
@@ -157,12 +157,16 @@ int main() {
 
 	PackerProblem* pC = loadPackerProblem("input.txt");
 
-	qsort(pC->boxes, pC->numberOfBoxes, sizeof(pC->boxes[0]), compare);
+	qsort(&pC->boxes, 25, sizeof(pC->boxes[0]), compare);
 
-	pC->print();
+	//pC->print();
 
 
-	cout << typeid(pC->boxes).name() << endl;
+
+	cout << "something";
+
+	pC->numberOfBoxes = 26;
+
 
 };
-//TODO Ask Questions: 1.returning address of a local variable(loadpackerPrblem). 2. Quicksort. 3. doesn't hueristics oppose the "find all solutions" additional requirement 4. Function to print the box configurations and the container in the PackerProblem DS
+//TODO Ask Questions: 1.returning address of a local variable(loadpackerPrblem) - is the pointer deleted after some time?. 2. doesn't hueristics oppose the "find all solutions" additional requirement 3. Function to print the box configurations and the container in the PackerProblem DS
