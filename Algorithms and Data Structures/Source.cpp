@@ -19,6 +19,32 @@ typedef struct PackerProblem {
 	
 	box boxes[25];
 
+	void print() {
+
+		//print container and boxes
+		cout << "Container Configuration (" << (int)length << "x" << (int)width << ")" << endl;
+
+		//top
+		cout << '+' << string(width, '-') << '+' << endl;
+
+		//body
+		for (int i = 0; i < length; i++) {
+			cout << '|' << string(width, 'X') << '|' << endl;
+		}
+		//bottom
+		cout << '+' << string(width, '-') << '+' << endl;
+
+		cout << numberOfBoxes << " Boxes to be placed" << endl;
+		//boxes
+		for (int i = 0; i < numberOfBoxes; i++) {
+			cout << boxes[i].name << " (" << (int)boxes[i].width << "x" << (int)boxes[i].length << ")" << endl;
+			for (int j = 0; j < boxes[i].length; j++) {
+				cout << string(boxes[i].width, boxes[i].name) << endl;
+			}
+			cout << endl;
+		}
+
+	};
 };
 
 
@@ -51,9 +77,7 @@ PackerProblem* loadPackerProblem(string filename) {
 		exit(3);
 	}
 
-	//Reading and initiating main class with number of boxes and size of the cont
-	
-	
+	//Reading and initiating main object with number of boxes and size of the cont
 	
 	getline(file, newLine, ' ');
 	check_int(&newLine);
@@ -104,28 +128,8 @@ PackerProblem* loadPackerProblem(string filename) {
 
 	//TODO After solving, compare to unused space and calulate efficiency
 	cout << "The optimal solution would use " << sumAreaBoxes << " square sm of space, leaving empty " << areaContainer - sumAreaBoxes << " sq.sm. of space." << endl << endl;
-	//print container and boxes
-	cout << "Container Configuration (" << (int)container.length << "x" << (int)container.width << ")" << endl;
 	
-	//top
-	cout << '+' << string(container.width, '-') << '+' << endl;
-	
-	//body
-	for (int i = 0; i < container.length; i++) {
-		cout << '|' << string(container.width, 'X') << '|' << endl;
-	}
-	//bottom
-	cout << '+' << string(container.width, '-') << '+' << endl;
-
-	cout << container.numberOfBoxes << " Boxes to be placed" << endl;
-	//boxes
-	for (int i = 0; i < container.numberOfBoxes; i++) {
-		cout << container.boxes[i].name << " (" << (int)container.boxes[i].width << "x" << (int)container.boxes[i].length << ")" << endl;
-		for (int j = 0; j < container.boxes[i].length; j++) {
-			cout << string(container.boxes[i].width, container.boxes[i].name) << endl;
-		}
-		cout << endl;
-	}
+	container.print();
 
 	return &container;
 }
@@ -148,15 +152,17 @@ int compare(const void* a, const void* b) {
 }
 
 int main() {
-	
-	
-	
+
+
+
 	PackerProblem* pC = loadPackerProblem("input.txt");
 
-	/*qsort(pC->boxes, pC->numberOfBoxes, sizeof(pC->boxes[0]), compare);*/
+	qsort(pC->boxes, pC->numberOfBoxes, sizeof(pC->boxes[0]), compare);
 
-	cout << sizeof(pC->boxes[0]);
-	
-	
-}
-//TODO Ask Questions: 1. typedef? 2.returning address of a local variable(loadpackerPrblem). 3. Quicksort. 4.Iterate each input with for-loop matching ASCII? RegEx? 5. doesn't hueristics oppose the "find all solutions" additional requirement 6. Function to print the box configurations and the container in the PackerProblem DS
+	pC->print();
+
+
+	cout << typeid(pC->boxes).name() << endl;
+
+};
+//TODO Ask Questions: 1.returning address of a local variable(loadpackerPrblem). 2. Quicksort. 3. doesn't hueristics oppose the "find all solutions" additional requirement 4. Function to print the box configurations and the container in the PackerProblem DS
