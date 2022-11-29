@@ -6,19 +6,38 @@
 
 using namespace std;
 
+
+/// <summary>
+/// A box to be placed in the container. Has three dimentions: width, length, and name.
+/// </summary>
 typedef struct box {
 	unsigned char width;
 	unsigned char length;
 	unsigned char name;
 };
 
+/// <summary>
+/// The container that holds the number of boxes to be placed, its width, length, a pointer to boxes.
+/// Two functions to dynamically allocate boxes and to print all of the configurations.
+/// </summary>
 typedef struct PackerProblem {
-	unsigned short numberOfBoxes;
-	unsigned char width;
-	unsigned char length;
+	unsigned short number_boxes = 0;
+	unsigned char width = 0;
+	unsigned char length = 0;
 	
-	box boxes[25];
+	box* boxes;
 
+	/// <summary>
+	/// Constructor for dynamic boxes.
+	/// </summary>
+	/// <param name="num_boxes">Number of boxes that needs to be allocated</param>
+	void allocate_boxes(short num_boxes) {
+		boxes = new box[num_boxes];
+	}
+
+	/// <summary>
+	/// Prints the container boxes and some additional information.
+	/// </summary>
 	void print() {
 
 		//print container and boxes
@@ -34,9 +53,9 @@ typedef struct PackerProblem {
 		//bottom
 		cout << '+' << string(width, '-') << '+' << endl;
 
-		cout << numberOfBoxes << " Boxes to be placed" << endl;
+		cout << number_boxes << " Boxes to be placed" << endl;
 		//boxes
-		for (int i = 0; i < numberOfBoxes; i++) {
+		for (int i = 0; i < number_boxes; i++) {
 			cout << boxes[i].name << " (" << (int)boxes[i].width << "x" << (int)boxes[i].length << ")" << endl;
 			for (int j = 0; j < boxes[i].length; j++) {
 				cout << string(boxes[i].width, boxes[i].name) << endl;
@@ -47,11 +66,14 @@ typedef struct PackerProblem {
 	};
 };
 
-
-void check_int(string* s) {
-	for (auto ch : *s) {
+/// <summary>
+/// String input validation. Checks that each char is an integer.
+/// </summary>
+/// <param name="s">Takes a pointer to a string.</param>
+void check_int(string* str) {
+	for (auto ch : *str) {
 		if (isdigit(ch) == 0) {
-			cout << "Illegal charchter \"" << ch << "\" detected in stream.Only integers allowed.";
+			cout << "Illegal charchter \"" << ch << "\" detected in stream. Only integers allowed.";
 			exit(3);
 		}
 	}
@@ -89,7 +111,8 @@ PackerProblem* loadPackerProblem(string filename) {
 
 	getline(file, newLine);
 	check_int(&newLine);
-	container.numberOfBoxes = stoi(newLine);
+	container.number_boxes = stoi(newLine);
+	container.allocate_boxes(container.number_boxes);
 
 	areaContainer = container.width * container.length;
 	
@@ -120,7 +143,7 @@ PackerProblem* loadPackerProblem(string filename) {
 		exit(3);
 	}
 
-	if (counter != container.numberOfBoxes) {
+	if (counter != container.number_boxes) {
 		cout << "The file is currupted!" << endl;
 		cout << "Incorrect number of boxes provided/specified." << endl;
 		exit(3);
@@ -134,7 +157,8 @@ PackerProblem* loadPackerProblem(string filename) {
 	return &container;
 }
 
-//TODO Implement compare objects fuction by volume
+
+//TODO Delete integer casting when qsort is woring
 int compare(const void* a, const void* b) {
 	box *x = (box*)a;
 	box *y = (box*)b;
@@ -153,20 +177,12 @@ int compare(const void* a, const void* b) {
 
 int main() {
 
-
-
 	PackerProblem* pC = loadPackerProblem("input.txt");
+	
 
 	qsort(&pC->boxes, 25, sizeof(pC->boxes[0]), compare);
 
-	//pC->print();
-
-
-
-	cout << "something";
-
-	pC->numberOfBoxes = 26;
-
+	
 
 };
 //TODO Ask Questions: 1.returning address of a local variable(loadpackerPrblem) - is the pointer deleted after some time?. 2. doesn't hueristics oppose the "find all solutions" additional requirement 3. Function to print the box configurations and the container in the PackerProblem DS
