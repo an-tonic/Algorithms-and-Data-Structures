@@ -80,7 +80,7 @@ void check_int(string* str) {
 }
 
 PackerProblem* loadPackerProblem(string filename) {
-	PackerProblem container;
+	PackerProblem* container = new PackerProblem();
 	ifstream file(filename);
 	string newLine;
 	unsigned short counter = 0;
@@ -103,18 +103,18 @@ PackerProblem* loadPackerProblem(string filename) {
 	
 	getline(file, newLine, ' ');
 	check_int(&newLine);
-	container.width = stoi(newLine);
+	container->width = stoi(newLine);
 		
 	getline(file, newLine, '\n');
 	check_int(&newLine);
-	container.length = stoi(newLine);
+	container->length = stoi(newLine);
 
 	getline(file, newLine);
 	check_int(&newLine);
-	container.number_boxes = stoi(newLine);
-	container.allocate_boxes(container.number_boxes);
+	container->number_boxes = stoi(newLine);
+	container->allocate_boxes(container->number_boxes);
 
-	areaContainer = container.width * container.length;
+	areaContainer = container->width * container->length;
 	
 	
 	
@@ -122,28 +122,28 @@ PackerProblem* loadPackerProblem(string filename) {
 	while (file.good()) {
 		getline(file, newLine, ' ');
 		check_int(&newLine);
-		container.boxes[counter].length = stoi(newLine);
+		container->boxes[counter].length = stoi(newLine);
 
 		getline(file, newLine, ' ');
 		check_int(&newLine);
-		container.boxes[counter].width = stoi(newLine);
+		container->boxes[counter].width = stoi(newLine);
 
 		//No input checks for the name. We expect any char.
 		getline(file, newLine, '\n');
-		container.boxes[counter].name = newLine[0];
+		container->boxes[counter].name = newLine[0];
 
-		sumAreaBoxes = sumAreaBoxes + (int)container.boxes[counter].length * (int)container.boxes[counter].width;
+		sumAreaBoxes = sumAreaBoxes + (int)container->boxes[counter].length * (int)container->boxes[counter].width;
 		counter++;
 	}
 
 	if (sumAreaBoxes > areaContainer) {
 		cout << "The problem is unsolvable!" << endl;
-		cout << "The area of boxes exceed the area of the container." << endl;
+		cout << "The area of boxes exceed the area of the container->" << endl;
 		cout << "Container area: " << areaContainer << " " << " Sum of the boxes' area: " << sumAreaBoxes << endl;
 		exit(3);
 	}
 
-	if (counter != container.number_boxes) {
+	if (counter != container->number_boxes) {
 		cout << "The file is currupted!" << endl;
 		cout << "Incorrect number of boxes provided/specified." << endl;
 		exit(3);
@@ -152,9 +152,9 @@ PackerProblem* loadPackerProblem(string filename) {
 	//TODO After solving, compare to unused space and calulate efficiency
 	cout << "The optimal solution would use " << sumAreaBoxes << " square sm of space, leaving empty " << areaContainer - sumAreaBoxes << " sq.sm. of space." << endl << endl;
 	
-	container.print();
+	container->print();
 
-	return &container;
+	return container;
 }
 
 
@@ -180,9 +180,9 @@ int main() {
 	PackerProblem* pC = loadPackerProblem("input.txt");
 	
 
-	qsort(&pC->boxes, 25, sizeof(pC->boxes[0]), compare);
+	qsort(pC->boxes, 25, sizeof(pC->boxes[0]), compare);
 
-	
+	cout << "ok";
 
 };
-//TODO Ask Questions: 1.returning address of a local variable(loadpackerPrblem) - is the pointer deleted after some time?. 2. doesn't hueristics oppose the "find all solutions" additional requirement 3. Function to print the box configurations and the container in the PackerProblem DS
+//TODO Ask Questions:  2. doesn't hueristics oppose the "find all solutions" additional requirement 3. Function to print the box configurations and the container in the PackerProblem DS
