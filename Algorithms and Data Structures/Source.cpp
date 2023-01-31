@@ -91,7 +91,7 @@ typedef struct PackerProblem {
 
 		//body
 		for (int i = 0; i < length; i++) {
-			cout << '|';
+			cout << i << '|';
 			for (int j = 0; j < width; j++) {
 				cout << (int)container[i][j];
 			}
@@ -204,7 +204,7 @@ PackerProblem* loadPackerProblem(string filename) {
 	}
 
 	//TODO After solving, compare to unused space and calulate efficiency
-	cout << "The optimal solution would use " << sumAreaBoxes << " square sm of space, leaving empty " << areaContainer - sumAreaBoxes << " sq.sm. of space." << endl << endl;
+	//cout << "The optimal solution would use " << sumAreaBoxes << " square sm of space, leaving empty " << areaContainer - sumAreaBoxes << " sq.sm. of space." << endl << endl;
 	
 
 	return problem;
