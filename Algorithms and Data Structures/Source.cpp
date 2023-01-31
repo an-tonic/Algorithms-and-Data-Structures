@@ -3,7 +3,7 @@
 #include <string>
 #include <fstream>
 #include "QuickSort.h"
-
+#include "Stack.h"
 
 using namespace std;
 
@@ -23,14 +23,20 @@ void check_int(string* str) {
 }
 
 
-//Absract data types
+//Abstract data types
 /// <summary>
 /// A box to be placed in the container. Has three dimentions: width, length, and name.
 /// </summary>
 typedef struct box {
+
+
 	unsigned char width;
 	unsigned char length;
 	unsigned char name;
+
+	int boxArea() {
+		return ((int)width * (int)length);
+	}
 
 	// Operator Overloadings on area of the boxes
 
@@ -53,11 +59,16 @@ typedef struct box {
 	bool operator >=(const box& bx) {
 		return width * length >= bx.width * bx.length;
 	}
-
-	int boxArea() {
-		return ((int)width * (int)length);
-	}
 };
+
+typedef struct Coordinates {
+	unsigned short int x;
+	unsigned short int y;
+
+	box* boxInContainer;
+
+};
+
 
 /// <summary>
 /// The container that holds the number of boxes to be placed, its width, length, a pointer to boxes.
@@ -91,9 +102,10 @@ typedef struct PackerProblem {
 
 		//body
 		for (int i = 0; i < length; i++) {
-			cout << i << '|';
+			
+			cout << '|';
 			for (int j = 0; j < width; j++) {
-				cout << (int)container[i][j];
+				cout << container[i][j];
 			}
 
 			cout << '|' << endl;
@@ -119,7 +131,6 @@ typedef struct PackerProblem {
 
 	};
 };
-
 
 PackerProblem* loadPackerProblem(string filename) {
 	PackerProblem* problem = new PackerProblem();
@@ -158,7 +169,7 @@ PackerProblem* loadPackerProblem(string filename) {
 	}
 	for (int i = 0; i < problem->length; i++) {
 		for (int j = 0; j < problem->width; j++) {
-			problem->container[i][j] = 0;
+			problem->container[i][j] = '0';
 		}
 	}
 	
@@ -176,11 +187,11 @@ PackerProblem* loadPackerProblem(string filename) {
 	while (file.good()) {
 		getline(file, newLine, ' ');
 		check_int(&newLine);
-		problem->boxes[counter].length = stoi(newLine);
+		problem->boxes[counter].width = stoi(newLine);
 
 		getline(file, newLine, ' ');
 		check_int(&newLine);
-		problem->boxes[counter].width = stoi(newLine);
+		problem->boxes[counter].length = stoi(newLine);
 
 		//No input checks for the name. We expect any char.
 		getline(file, newLine, '\n');
@@ -210,21 +221,69 @@ PackerProblem* loadPackerProblem(string filename) {
 	return problem;
 }
 
+void placeBox(PackerProblem* problem, Coordinates* someBox) {
+
+	for (int i = someBox->x; i < someBox->x + someBox->boxInContainer->width; i++) {
+		for (int j = someBox->y; j < someBox->y + someBox->boxInContainer->length; j++) {
+			problem->container[j][i] = someBox->boxInContainer->name;
+		}
+	}
+}
+
+void solveProblen(PackerProblem* problem) {
+	Stack<Coordinates> stack;
+
+	int boxIndex = 0;
+	Coordinates start = {0, 0, &problem->boxes[boxIndex]};
+	boxIndex++;
+	stack.push(start);
+
+	placeBox(problem, &start);
+	
+	
+
+	while (!stack.isEmpty()){
+
+		Coordinates pos = stack.top();
+
+		if (boxIndex >= problem->number_boxes) {
+			cout << "Found the solution";
+			problem->printContainer();
+			return;
+		}
+		else if (problem->container[pos.x + pos.boxInContainer->width][pos.y] == '0') {
+			Coordinates newC = {pos.boxInContainer->width, pos.y, &problem->boxes[boxIndex]};
+			stack.push(newC);
+			placeBox(problem, &newC);
+			boxIndex++;
+		}
+	}
+}
+
+
 
 int main() {
 
 	PackerProblem* pC = loadPackerProblem("input.txt");
 	
+	QuickSort<box>(pC->boxes, 0, pC->number_boxes);
+
+	pC->printContainer();
+
+	solveProblen(pC);
+
+	
+
 	pC->printContainer();
 	/*pC->printBoxes();
 	cout << "1";
 	cout << "2";
 
-	QuickSort<box>(pC->boxes, 0, pC->number_boxes);
+	
 
 	pC->printBoxes();*/
 	
-
+	
 
 
 };
