@@ -2,69 +2,12 @@
 #include <iomanip>
 #include <string>
 #include <fstream>
+#include "QuickSort.h"
 
 
 using namespace std;
 
-
-/// <summary>
-/// A box to be placed in the container. Has three dimentions: width, length, and name.
-/// </summary>
-typedef struct box {
-	unsigned char width;
-	unsigned char length;
-	unsigned char name;
-};
-
-/// <summary>
-/// The container that holds the number of boxes to be placed, its width, length, a pointer to boxes.
-/// Two functions to dynamically allocate boxes and to print all of the configurations.
-/// </summary>
-typedef struct PackerProblem {
-	unsigned short number_boxes = 0;
-	unsigned char width = 0;
-	unsigned char length = 0;
-	
-	box* boxes;
-
-	/// <summary>
-	/// Constructor for dynamic boxes.
-	/// </summary>
-	/// <param name="num_boxes">Number of boxes that needs to be allocated</param>
-	void allocate_boxes(short num_boxes) {
-		boxes = new box[num_boxes];
-	}
-
-	/// <summary>
-	/// Prints the container boxes and some additional information.
-	/// </summary>
-	void print() {
-
-		//print container and boxes
-		cout << "Container Configuration (" << (int)length << "x" << (int)width << ")" << endl;
-
-		//top
-		cout << '+' << string(width, '-') << '+' << endl;
-
-		//body
-		for (int i = 0; i < length; i++) {
-			cout << '|' << string(width, 'X') << '|' << endl;
-		}
-		//bottom
-		cout << '+' << string(width, '-') << '+' << endl;
-
-		cout << number_boxes << " Boxes to be placed" << endl;
-		//boxes
-		for (int i = 0; i < number_boxes; i++) {
-			cout << boxes[i].name << " (" << (int)boxes[i].width << "x" << (int)boxes[i].length << ")" << endl;
-			for (int j = 0; j < boxes[i].length; j++) {
-				cout << string(boxes[i].width, boxes[i].name) << endl;
-			}
-			cout << endl;
-		}
-
-	};
-};
+//Util functions
 
 /// <summary>
 /// String input validation. Checks that each char is an integer.
@@ -79,13 +22,112 @@ void check_int(string* str) {
 	}
 }
 
+
+//Absract data types
+/// <summary>
+/// A box to be placed in the container. Has three dimentions: width, length, and name.
+/// </summary>
+typedef struct box {
+	unsigned char width;
+	unsigned char length;
+	unsigned char name;
+
+	// Operator Overloadings on area of the boxes
+
+	bool operator >(const box& bx) {
+		return width*length > bx.width * bx.length;
+	}
+
+	bool operator <(const box& bx) {
+		return width * length < bx.width * bx.length;
+	}
+
+	bool operator ==(const box& bx) {
+		return width * length == bx.width * bx.length;
+	}
+
+	bool operator <=(const box& bx) {
+		return width * length <= bx.width * bx.length;
+	}
+
+	bool operator >=(const box& bx) {
+		return width * length >= bx.width * bx.length;
+	}
+
+	int boxArea() {
+		return ((int)width * (int)length);
+	}
+};
+
+/// <summary>
+/// The container that holds the number of boxes to be placed, its width, length, a pointer to boxes.
+/// Two functions to dynamically allocate boxes and to print all of the configurations.
+/// </summary>
+typedef struct PackerProblem {
+	unsigned short number_boxes = 0;
+	unsigned short int width = 0;
+	unsigned short int length = 0;
+	unsigned char** container;
+
+	box* boxes;
+
+	/// <summary>
+	/// Constructor for dynamic boxes.
+	/// </summary>
+	/// <param name="num_boxes">Number of boxes that needs to be allocated</param>
+	void allocate_boxes(short num_boxes) {
+		boxes = new box[num_boxes];
+	}
+
+	/// <summary>
+	/// Prints the container2 and some additional information.
+	/// </summary>
+	void printContainer() {
+		//print container
+		cout << "Container Configuration (" << length << "x" << width << ")" << endl;
+
+		//top
+		cout << '+' << string(width, '-') << '+' << endl;
+
+		//body
+		for (int i = 0; i < length; i++) {
+			cout << '|';
+			for (int j = 0; j < width; j++) {
+				cout << (int)container[i][j];
+			}
+
+			cout << '|' << endl;
+		}
+		//bottom
+		cout << '+' << string(width, '-') << '+' << endl;
+	}
+
+	/// <summary>
+	/// Prints the boxes and some additional information.
+	/// </summary>
+	void printBoxes() {
+
+		//print boxes
+		cout << number_boxes << " Boxes to be placed" << endl;
+		for (int i = 0; i < number_boxes; i++) {
+			cout << boxes[i].name << " (" << (int)boxes[i].width << "x" << (int)boxes[i].length << ")" << endl;
+			for (int j = 0; j < boxes[i].length; j++) {
+				cout << string(boxes[i].width, boxes[i].name) << endl;
+			}
+			cout << endl;
+		}
+
+	};
+};
+
+
 PackerProblem* loadPackerProblem(string filename) {
-	PackerProblem container;
+	PackerProblem* problem = new PackerProblem();
 	ifstream file(filename);
 	string newLine;
 	unsigned short counter = 0;
-	unsigned short areaContainer = 0;
-	unsigned short sumAreaBoxes = 0;
+	unsigned int areaContainer = 0;
+	unsigned int sumAreaBoxes = 0;
 
 	//Reading and proof-checking the first line of the file
 	getline(file, newLine);
@@ -99,22 +141,34 @@ PackerProblem* loadPackerProblem(string filename) {
 		exit(3);
 	}
 
-	//Reading and initiating main object with number of boxes and size of the cont
+	//Reading and initiating main object with number of boxes and size of the container
 	
 	getline(file, newLine, ' ');
 	check_int(&newLine);
-	container.width = stoi(newLine);
+	problem->width = stoi(newLine);
 		
 	getline(file, newLine, '\n');
 	check_int(&newLine);
-	container.length = stoi(newLine);
+	problem->length = stoi(newLine);
+	
+	//Initialyzing the container with empty space
+	problem->container = new unsigned char* [problem->width];
+	for (int i = 0; i < problem->length; i++) {
+		problem->container[i] = new unsigned char[problem->length];
+	}
+	for (int i = 0; i < problem->length; i++) {
+		for (int j = 0; j < problem->width; j++) {
+			problem->container[i][j] = 0;
+		}
+	}
+	
 
 	getline(file, newLine);
 	check_int(&newLine);
-	container.number_boxes = stoi(newLine);
-	container.allocate_boxes(container.number_boxes);
+	problem->number_boxes = stoi(newLine);
+	problem->allocate_boxes(problem->number_boxes);
 
-	areaContainer = container.width * container.length;
+	areaContainer = problem->width * problem->length;
 	
 	
 	
@@ -122,17 +176,17 @@ PackerProblem* loadPackerProblem(string filename) {
 	while (file.good()) {
 		getline(file, newLine, ' ');
 		check_int(&newLine);
-		container.boxes[counter].length = stoi(newLine);
+		problem->boxes[counter].length = stoi(newLine);
 
 		getline(file, newLine, ' ');
 		check_int(&newLine);
-		container.boxes[counter].width = stoi(newLine);
+		problem->boxes[counter].width = stoi(newLine);
 
 		//No input checks for the name. We expect any char.
 		getline(file, newLine, '\n');
-		container.boxes[counter].name = newLine[0];
+		problem->boxes[counter].name = newLine[0];
 
-		sumAreaBoxes = sumAreaBoxes + (int)container.boxes[counter].length * (int)container.boxes[counter].width;
+		sumAreaBoxes = sumAreaBoxes + problem->boxes[counter].boxArea();
 		counter++;
 	}
 
@@ -143,7 +197,7 @@ PackerProblem* loadPackerProblem(string filename) {
 		exit(3);
 	}
 
-	if (counter != container.number_boxes) {
+	if (counter != problem->number_boxes) {
 		cout << "The file is currupted!" << endl;
 		cout << "Incorrect number of boxes provided/specified." << endl;
 		exit(3);
@@ -152,37 +206,25 @@ PackerProblem* loadPackerProblem(string filename) {
 	//TODO After solving, compare to unused space and calulate efficiency
 	cout << "The optimal solution would use " << sumAreaBoxes << " square sm of space, leaving empty " << areaContainer - sumAreaBoxes << " sq.sm. of space." << endl << endl;
 	
-	container.print();
 
-	return &container;
+	return problem;
 }
 
-
-//TODO Delete integer casting when qsort is woring
-int compare(const void* a, const void* b) {
-	box *x = (box*)a;
-	box *y = (box*)b;
-
-	if ((int)x->length * (int)x->width > (int)y->length * (int)y->width) {
-		return 1;
-	}
-		
-	else if ((int)x->length * (int)x->width < (int)y->length * (int)y->width) {
-		return -1;
-	}
-
-
-	return 0;
-}
 
 int main() {
 
 	PackerProblem* pC = loadPackerProblem("input.txt");
 	
+	pC->printContainer();
+	/*pC->printBoxes();
+	cout << "1";
+	cout << "2";
 
-	qsort(&pC->boxes, 25, sizeof(pC->boxes[0]), compare);
+	QuickSort<box>(pC->boxes, 0, pC->number_boxes);
 
+	pC->printBoxes();*/
 	
 
+
+
 };
-//TODO Ask Questions: 1.returning address of a local variable(loadpackerPrblem) - is the pointer deleted after some time?. 2. doesn't hueristics oppose the "find all solutions" additional requirement 3. Function to print the box configurations and the container in the PackerProblem DS
