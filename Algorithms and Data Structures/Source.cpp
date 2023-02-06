@@ -4,9 +4,11 @@
 #include <fstream>
 #include "QuickSort.h"
 #include "Stack.h"
+#include <ctime>
+#include <chrono>
 
 using namespace std;
-
+using namespace std::chrono;
 //Util functions
 
 /// <summary>
@@ -39,6 +41,8 @@ typedef struct box {
 	unsigned char width;
 	unsigned char length;
 	unsigned char name;
+	unsigned char x = NULL;
+	unsigned char y = NULL;
 
 	int boxArea() {
 		return ((int)width * (int)length);
@@ -75,7 +79,6 @@ typedef struct Coordinates {
 
 };
 
-
 /// <summary>
 /// The container that holds the number of boxes to be placed, its width, length, a pointer to boxes.
 /// Two functions to dynamically allocate boxes and to print all of the configurations.
@@ -110,7 +113,7 @@ typedef struct PackerProblem {
 		for (int i = 0; i < length; i++) {
 			cout << i << '|';
 			for (int j = 0; j < width; j++) {
-				cout << (int)container[j][i];
+				cout << container[j][i];
 			}
 
 			cout << '|' << endl;
@@ -174,7 +177,7 @@ PackerProblem* loadPackerProblem(string filename) {
 	}
 	for (int i = 0; i < problem->width; i++) {
 		for (int j = 0; j < problem->length; j++) {
-			problem->container[i][j] = 0;
+			problem->container[i][j] = '0';
 		}
 	}
 	
@@ -226,24 +229,49 @@ PackerProblem* loadPackerProblem(string filename) {
 	return problem;
 }
 
-void placeBox(PackerProblem* problem, Coordinates* someBox) {
+bool placeBox(PackerProblem* problem, box* box) {
+	bool canBePlaced = true;
+	int xBounds = box->x + box->width;
+	int yBounds = box->y + box->length;
 
-	for (int i = someBox->x; i < someBox->x + someBox->boxInContainer->width; i++) {
-		for (int j = someBox->y; j < someBox->y + someBox->boxInContainer->length; j++) {
-			problem->container[j][i] = someBox->boxInContainer->name;
-		}
+	if (xBounds > problem->width || yBounds > problem->length) {
+		return !canBePlaced;
 	}
+	else {
+
+		for (int i = box->x; i < xBounds; i++) {
+			for (int j = box->y; j < yBounds; j++) {
+				if (problem->container[j][i] != '0') {
+					return !canBePlaced;
+				}
+			}
+		}
+		if (canBePlaced) {
+			//Placing the box in the container overwriting containers contents.
+			for (int i = box->x; i < xBounds; i++) {
+
+				for (int j = box->y; j < yBounds; j++) {
+					
+					problem->container[j][i] = box->name;
+				}
+			}
+			return canBePlaced;
+		}
+
+	}
+
+
 }
 
 void solveProblen(PackerProblem* problem) {
 	Stack<Coordinates> stack;
 
 	int boxIndex = 0;
-	Coordinates start = {0, 0, &problem->boxes[boxIndex]};
+	
 	boxIndex++;
-	stack.push(start);
+	
 
-	placeBox(problem, &start);
+	
 	
 	
 
@@ -259,12 +287,11 @@ void solveProblen(PackerProblem* problem) {
 		else if (problem->container[pos.x + pos.boxInContainer->width][pos.y] == '0') {
 			Coordinates newC = {pos.boxInContainer->width, pos.y, &problem->boxes[boxIndex]};
 			stack.push(newC);
-			placeBox(problem, &newC);
+			
 			boxIndex++;
 		}
 	}
 }
-
 
 
 int main() {
@@ -272,14 +299,18 @@ int main() {
 	PackerProblem* pC = loadPackerProblem("input.txt");
 	
 	QuickSort<box>(pC->boxes, 0, pC->number_boxes);
+	pC->printBoxes();
+	pC->printContainer();
+	pC->boxes[24].x = 2;
+	pC->boxes[24].y = 2;
+
 
 	pC->printContainer();
 
-	/*solveProblen(pC);*/
 
-	
+	/*placeBox(pC, &b);
 
-	//pC->printContainer();
+	pC->printContainer();*/
 	/*pC->printBoxes();
 	cout << "1";
 	cout << "2";
@@ -291,4 +322,4 @@ int main() {
 
 
 
-};
+}
