@@ -14,6 +14,12 @@ using namespace std;
 /// </summary>
 /// <param name="s">Takes a pointer to a string.</param>
 void check_int(string* str) {
+
+	if (*str == "") {
+		cout << "Illegal empty string detected in stream. Only integers allowed.";
+		exit(3);
+	}
+
 	for (auto ch : *str) {
 		if (isdigit(ch) == 0) {
 			cout << "Illegal charchter \"" << ch << "\" detected in stream. Only integers allowed.";
@@ -76,8 +82,8 @@ typedef struct Coordinates {
 /// </summary>
 typedef struct PackerProblem {
 	unsigned short number_boxes = 0;
-	unsigned short int width = 0;
-	unsigned short int length = 0;
+	unsigned short width = 0;
+	unsigned short length = 0;
 	unsigned char** container;
 
 	box* boxes;
@@ -86,7 +92,7 @@ typedef struct PackerProblem {
 	/// Constructor for dynamic boxes.
 	/// </summary>
 	/// <param name="num_boxes">Number of boxes that needs to be allocated</param>
-	void allocate_boxes(short num_boxes) {
+	void allocate_boxes(int num_boxes) {
 		boxes = new box[num_boxes];
 	}
 
@@ -104,7 +110,7 @@ typedef struct PackerProblem {
 		for (int i = 0; i < length; i++) {
 			cout << i << '|';
 			for (int j = 0; j < width; j++) {
-				cout << (int)container[i][j];
+				cout << (int)container[j][i];
 			}
 
 			cout << '|' << endl;
@@ -163,11 +169,11 @@ PackerProblem* loadPackerProblem(string filename) {
 	
 	//Initialyzing the container with empty space
 	problem->container = new unsigned char* [problem->width];
-	for (int i = 0; i < problem->length; i++) {
+	for (int i = 0; i < problem->width; i++) {
 		problem->container[i] = new unsigned char[problem->length];
 	}
-	for (int i = 0; i < problem->length; i++) {
-		for (int j = 0; j < problem->width; j++) {
+	for (int i = 0; i < problem->width; i++) {
+		for (int j = 0; j < problem->length; j++) {
 			problem->container[i][j] = 0;
 		}
 	}
@@ -269,11 +275,11 @@ int main() {
 
 	pC->printContainer();
 
-	solveProblen(pC);
+	/*solveProblen(pC);*/
 
 	
 
-	pC->printContainer();
+	//pC->printContainer();
 	/*pC->printBoxes();
 	cout << "1";
 	cout << "2";
