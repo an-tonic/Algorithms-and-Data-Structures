@@ -14,11 +14,6 @@ using namespace std;
 /// </summary>
 /// <param name="s">Takes a pointer to a string.</param>
 void check_int(string* str) {
-
-	if (*str == "") {
-		cout << "Illegal empty string detected in stream. Only integers allowed.";
-		exit(3);
-	}
 	for (auto ch : *str) {
 		if (isdigit(ch) == 0) {
 			cout << "Illegal charchter \"" << ch << "\" detected in stream. Only integers allowed.";
@@ -81,8 +76,8 @@ typedef struct Coordinates {
 /// </summary>
 typedef struct PackerProblem {
 	unsigned short number_boxes = 0;
-	unsigned short width = 0;
-	unsigned short length = 0;
+	unsigned short int width = 0;
+	unsigned short int length = 0;
 	unsigned char** container;
 
 	box* boxes;
@@ -91,7 +86,7 @@ typedef struct PackerProblem {
 	/// Constructor for dynamic boxes.
 	/// </summary>
 	/// <param name="num_boxes">Number of boxes that needs to be allocated</param>
-	void allocate_boxes(int num_boxes) {
+	void allocate_boxes(short num_boxes) {
 		boxes = new box[num_boxes];
 	}
 
@@ -107,9 +102,9 @@ typedef struct PackerProblem {
 
 		//body
 		for (int i = 0; i < length; i++) {
-			cout << '|';
+			cout << i << '|';
 			for (int j = 0; j < width; j++) {
-				cout << container[i][j];
+				cout << (int)container[i][j];
 			}
 
 			cout << '|' << endl;
@@ -159,29 +154,26 @@ PackerProblem* loadPackerProblem(string filename) {
 	//Reading and initiating main object with number of boxes and size of the container
 	
 	getline(file, newLine, ' ');
-	cout << newLine << endl;
 	check_int(&newLine);
 	problem->width = stoi(newLine);
 		
 	getline(file, newLine, '\n');
-	cout << newLine << endl;
 	check_int(&newLine);
 	problem->length = stoi(newLine);
 	
 	//Initialyzing the container with empty space
 	problem->container = new unsigned char* [problem->width];
-	for (int i = 0; i < problem->width; i++) {
+	for (int i = 0; i < problem->length; i++) {
 		problem->container[i] = new unsigned char[problem->length];
 	}
-	for (int i = 0; i < problem->width; i++) {
-		for (int j = 0; j < problem->length; j++) {
+	for (int i = 0; i < problem->length; i++) {
+		for (int j = 0; j < problem->width; j++) {
 			problem->container[i][j] = 0;
 		}
 	}
 	
 
 	getline(file, newLine);
-	cout << newLine << endl;
 	check_int(&newLine);
 	problem->number_boxes = stoi(newLine);
 	problem->allocate_boxes(problem->number_boxes);
@@ -289,6 +281,7 @@ int main() {
 	
 
 	pC->printBoxes();*/
+	
 
 
 
