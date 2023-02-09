@@ -234,64 +234,64 @@ bool placeBox(PackerProblem* problem, box* box) {
 	int xBounds = box->x + box->width;
 	int yBounds = box->y + box->length;
 
+	//Check that box is in contqiner bounds
 	if (xBounds > problem->width || yBounds > problem->length) {
 		return !canBePlaced;
 	}
-	else {
-
-		for (int i = box->x; i < xBounds; i++) {
-			for (int j = box->y; j < yBounds; j++) {
-				if (problem->container[j][i] != '0') {
-					return !canBePlaced;
-				}
+	
+	//Check that the space for the box is empty
+	for (int i = box->x; i < xBounds; i++) {
+		for (int j = box->y; j < yBounds; j++) {
+			if (problem->container[j][i] != '0') {
+				return !canBePlaced;
 			}
 		}
-		if (canBePlaced) {
-			//Placing the box in the container overwriting containers contents.
-			for (int i = box->x; i < xBounds; i++) {
-
-				for (int j = box->y; j < yBounds; j++) {
-					
-					problem->container[j][i] = box->name;
-				}
-			}
-			return canBePlaced;
-		}
-
 	}
-
-
+	
+	//Placing the box in the container
+	for (int i = box->x; i < xBounds; i++) {
+		for (int j = box->y; j < yBounds; j++) {					
+			problem->container[j][i] = box->name;
+		}
+	}
+	return canBePlaced;
 }
 
-void solveProblen(PackerProblem* problem) {
-	Stack<Coordinates> stack;
+void removeBox(PackerProblem* problem, box* box) {
 
-	int boxIndex = 0;
-	
-	boxIndex++;
-	
-
-	
-	
-	
-
-	while (!stack.isEmpty()){
-
-		Coordinates pos = stack.top();
-
-		if (boxIndex >= problem->number_boxes) {
-			cout << "Found the solution";
-			problem->printContainer();
-			return;
-		}
-		else if (problem->container[pos.x + pos.boxInContainer->width][pos.y] == '0') {
-			Coordinates newC = {pos.boxInContainer->width, pos.y, &problem->boxes[boxIndex]};
-			stack.push(newC);
-			
-			boxIndex++;
+	for (int i = box->x; i < box->x + box->width; i++) {
+		for (int j = box->y; j < box->y + box->length; j++) {
+			problem->container[j][i] = '0';
 		}
 	}
 }
+
+//void solveProblen(PackerProblem* problem) {
+//	Stack<Coordinates> stack;
+//
+//	int boxIndex = 0;
+//	
+//	boxIndex++;
+//
+//	
+//
+//	while (!stack.isEmpty()){
+//
+//		Coordinates pos = stack.top();
+//
+//		if (boxIndex >= problem->number_boxes) {
+//			cout << "Found the solution";
+//			problem->printContainer();
+//			return;
+//		}
+//		else if (problem->container[pos.x + pos.boxInContainer->width][pos.y] == '0') {
+//			Coordinates newC = {pos.boxInContainer->width, pos.y, &problem->boxes[boxIndex]};
+//			stack.push(newC);
+//			
+//			boxIndex++;
+//		}
+//	}
+//}
 
 
 int main() {
@@ -299,25 +299,16 @@ int main() {
 	PackerProblem* pC = loadPackerProblem("input.txt");
 	
 	QuickSort<box>(pC->boxes, 0, pC->number_boxes);
-	pC->printBoxes();
+	
 	pC->printContainer();
+	
 	pC->boxes[24].x = 2;
 	pC->boxes[24].y = 2;
+	placeBox(pC, &pC->boxes[24]);
 
+	removeBox(pC, &pC->boxes[24]);
 
 	pC->printContainer();
-
-
-	/*placeBox(pC, &b);
-
-	pC->printContainer();*/
-	/*pC->printBoxes();
-	cout << "1";
-	cout << "2";
-
-	
-
-	pC->printBoxes();*/
 	
 
 
