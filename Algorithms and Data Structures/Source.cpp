@@ -72,11 +72,9 @@ typedef struct box {
 };
 
 typedef struct Coordinates {
-	unsigned short int x;
-	unsigned short int y;
-
-	box* boxInContainer;
-
+	int x;
+	int y;
+	box* boxPlaced;
 };
 
 /// <summary>
@@ -111,7 +109,7 @@ typedef struct PackerProblem {
 
 		//body
 		for (int i = 0; i < length; i++) {
-			cout << i << '|';
+			cout << '|';
 			for (int j = 0; j < width; j++) {
 				cout << container[j][i];
 			}
@@ -229,10 +227,10 @@ PackerProblem* loadPackerProblem(string filename) {
 	return problem;
 }
 
-bool placeBox(PackerProblem* problem, box* box) {
+bool placeBox(PackerProblem* problem, box* box, int x, int y) {
 	bool canBePlaced = true;
-	int xBounds = box->x + box->width;
-	int yBounds = box->y + box->length;
+	int xBounds = x + box->width;
+	int yBounds = y + box->length;
 
 	//Check that box is in contqiner bounds
 	if (xBounds > problem->width || yBounds > problem->length) {
@@ -240,8 +238,8 @@ bool placeBox(PackerProblem* problem, box* box) {
 	}
 	
 	//Check that the space for the box is empty
-	for (int i = box->x; i < xBounds; i++) {
-		for (int j = box->y; j < yBounds; j++) {
+	for (int i = x; i < xBounds; i++) {
+		for (int j = y; j < yBounds; j++) {
 			if (problem->container[j][i] != '0') {
 				return !canBePlaced;
 			}
@@ -249,49 +247,81 @@ bool placeBox(PackerProblem* problem, box* box) {
 	}
 	
 	//Placing the box in the container
-	for (int i = box->x; i < xBounds; i++) {
-		for (int j = box->y; j < yBounds; j++) {					
+	for (int i = x; i < xBounds; i++) {
+		for (int j = y; j < yBounds; j++) {					
 			problem->container[j][i] = box->name;
 		}
 	}
 	return canBePlaced;
 }
 
-void removeBox(PackerProblem* problem, box* box) {
+void removeBox(PackerProblem* problem, box* box, int x, int y) {
 
-	for (int i = box->x; i < box->x + box->width; i++) {
-		for (int j = box->y; j < box->y + box->length; j++) {
+	for (int i = x; i < x + box->width; i++) {
+		for (int j = y; j <y + box->length; j++) {
 			problem->container[j][i] = '0';
 		}
 	}
 }
 
-//void solveProblen(PackerProblem* problem) {
-//	Stack<Coordinates> stack;
-//
-//	int boxIndex = 0;
-//	
-//	boxIndex++;
-//
-//	
-//
-//	while (!stack.isEmpty()){
-//
-//		Coordinates pos = stack.top();
-//
-//		if (boxIndex >= problem->number_boxes) {
-//			cout << "Found the solution";
-//			problem->printContainer();
-//			return;
-//		}
-//		else if (problem->container[pos.x + pos.boxInContainer->width][pos.y] == '0') {
-//			Coordinates newC = {pos.boxInContainer->width, pos.y, &problem->boxes[boxIndex]};
-//			stack.push(newC);
-//			
-//			boxIndex++;
-//		}
-//	}
-//}
+void solveProblen(PackerProblem* problem) {
+	Stack<Coordinates> stack;
+
+	int boxIndex = problem->number_boxes-1;
+	bool boxPlaced;
+	
+
+	Coordinates start = { 0,0, &problem->boxes[problem->number_boxes-1]};
+
+	stack.push(start);
+
+	while (!stack.isEmpty()){
+
+		
+
+		boxPlaced = false;
+		for (int i = 0; i < problem->length; i++) {
+			for (int j = 0; j < problem->width; j++) {
+				if (placeBox(problem, &problem->boxes[boxIndex], i, j)) {
+					problem->printContainer();
+					boxIndex--;
+					stack.push(Coordinates{ j, i , &problem->boxes[boxIndex]});
+					boxPlaced = true;
+					i = problem->length;
+					j = problem->width;
+				}
+			}
+		}
+
+		if (!boxPlaced) {
+			int x = stack.top().x+1;
+			int y = stack.top().y;
+			
+			removeBox(problem, stack.top().boxPlaced, x, y);
+			problem->printContainer();
+			stack.pop();
+			boxIndex++;
+			for (int i = y; i < problem->length; i++) {
+				for (int j = x; j < problem->width; j++) {
+					if (placeBox(problem, &problem->boxes[boxIndex], i, j)) {
+						problem->printContainer();
+						stack.push(Coordinates{ j, i , &problem->boxes[boxIndex] });
+						i = problem->length;
+						j = problem->width;
+						boxPlaced = true;
+						boxIndex--;
+					}
+				}
+				x = 0;
+			}
+			
+			
+		}
+		
+		if (boxIndex == 0) return;
+		
+	}
+}
 
 
 int main() {
@@ -299,18 +329,12 @@ int main() {
 	PackerProblem* pC = loadPackerProblem("input.txt");
 	
 	QuickSort<box>(pC->boxes, 0, pC->number_boxes);
-	
-	pC->printContainer();
-	
-	pC->boxes[24].x = 2;
-	pC->boxes[24].y = 2;
-	placeBox(pC, &pC->boxes[24]);
-
-	removeBox(pC, &pC->boxes[24]);
 
 	pC->printContainer();
-	
 
+	solveProblen(pC);
+	
+	pC->printContainer();
 
 
 }
