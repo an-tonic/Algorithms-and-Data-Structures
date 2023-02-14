@@ -41,8 +41,6 @@ typedef struct box {
 	unsigned char width;
 	unsigned char length;
 	unsigned char name;
-	unsigned char x = NULL;
-	unsigned char y = NULL;
 
 	int boxArea() {
 		return ((int)width * (int)length);
@@ -255,64 +253,67 @@ bool placeBox(PackerProblem* problem, box* box, int x, int y) {
 	return canBePlaced;
 }
 
-void removeBox(PackerProblem* problem, Coordinates* coord) {
+void removeBox(PackerProblem* problem, box* box, int x, int y) {
 
-	for (int i = coord->x; i < coord->x + coord->boxPlaced->width; i++) {
-		for (int j = coord->y; j < coord->y + coord->boxPlaced->length; j++) {
-			problem->container[i][j] = '0';
-			problem->printContainer();
-			cout << coord->boxPlaced->name << endl;
+	for (int i = x; i < x + box->width; i++) {
+		for (int j = y; j < y + box->length; j++) {
+			problem->container[i][j] = '0';		
 		}
 	}
 }
 
 void solveProblen(PackerProblem* problem) {
-	Stack<Coordinates*> stack;
+	Stack<Coordinates> stack;
 
 	int boxIndex = problem->number_boxes-1;
-	bool boxPlaced = false;
+	bool boxPlaced = true;
 	
-	Coordinates sm = { 0,0, &problem->boxes[problem->number_boxes - 1] };
 
-	Coordinates* start = &sm;
-
-	stack.push(start);
+	stack.push(Coordinates{ 0,0, &problem->boxes[problem->number_boxes - 1] });
+	
+	placeBox(problem, &problem->boxes[boxIndex], 0, 0);
+	boxIndex--;
+	
 
 	while (!stack.isEmpty()){
 
 		
-		boxPlaced = false;
 		
-		for (int i = 0; i < problem->length; i++) {
-			for (int j = 0; j < problem->width; j++) {
-				if (placeBox(problem, &problem->boxes[boxIndex], i, j)) {
-					problem->printContainer();
-					boxIndex--;
-					Coordinates tmp = { j, i , &problem->boxes[boxIndex] };
-					stack.push(&tmp);
-					boxPlaced = true;
-					i = problem->length;
-					j = problem->width;
+		if (boxPlaced) {
+			for (int i = 0; i < problem->length; i++) {
+				for (int j = 0; j < problem->width; j++) {
+					if (placeBox(problem, &problem->boxes[boxIndex], i, j)) {
+												
+						stack.push(Coordinates({ j, i, &problem->boxes[boxIndex] }));
+						boxPlaced = true;
+						boxIndex--;
+						i = problem->length;
+						j = problem->width;
+					}
+					else {
+						boxPlaced = false;
+					}
 				}
 			}
 		}
-		
 		if (!boxPlaced) {
-			removeBox(problem, stack.top());
-			int x = stack.top()->x + 1;
-			int y = stack.top()->y;
+			
+
+			removeBox(problem, stack.top().boxPlaced, stack.top().x, stack.top().y);
+			int x = stack.top().x + 1;
+			int y = stack.top().y;
 			
 			
-			problem->printContainer();
+			
 			stack.pop();
 			boxIndex++;
 			
 			for (int i = y; i < problem->length; i++) {
 				for (int j = x; j < problem->width; j++) {
 					if (placeBox(problem, &problem->boxes[boxIndex], i, j)) {
-						problem->printContainer();
-						Coordinates tmp = { j, i , &problem->boxes[boxIndex] };
-						stack.push(&tmp);
+						
+						
+						stack.push(Coordinates({ j, i, &problem->boxes[boxIndex] }));
 						i = problem->length;
 						j = problem->width;
 						boxPlaced = true;
@@ -325,7 +326,7 @@ void solveProblen(PackerProblem* problem) {
 			
 		}
 		
-		if (boxIndex == 0) return;
+		if (boxIndex == -1) return;
 		
 	}
 }
@@ -335,7 +336,7 @@ int main() {
 
 	PackerProblem* pC = loadPackerProblem("input.txt");
 	
-	QuickSort<box>(pC->boxes, 0, pC->number_boxes);
+	//QuickSort<box>(pC->boxes, 0, pC->number_boxes);
 
 	pC->printContainer();
 
