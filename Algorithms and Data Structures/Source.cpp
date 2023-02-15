@@ -238,7 +238,7 @@ bool placeBox(PackerProblem* problem, box* box, int x, int y) {
 	//Check that the space for the box is empty
 	for (int i = x; i < xBounds; i++) {
 		for (int j = y; j < yBounds; j++) {
-			if (problem->container[j][i] != '0') {
+			if (problem->container[i][j] != '0') {
 				return !canBePlaced;
 			}
 		}
@@ -247,18 +247,19 @@ bool placeBox(PackerProblem* problem, box* box, int x, int y) {
 	//Placing the box in the container
 	for (int i = x; i < xBounds; i++) {
 		for (int j = y; j < yBounds; j++) {					
-			problem->container[j][i] = box->name;
+			problem->container[i][j] = box->name;
 		}
 	}
 	return canBePlaced;
 }
 
 void removeBox(PackerProblem* problem, box* box, int x, int y) {
+	int right = x + box->width;
+	int down = box->length;
 
-	for (int i = x; i < x + box->width; i++) {
-		for (int j = y; j < y + box->length; j++) {
-			problem->container[i][j] = '0';		
-		}
+
+	for (size_t i = x; i < right; i++) {
+		memset(&problem->container[i][y], '0', down);
 	}
 }
 
@@ -282,9 +283,9 @@ void solveProblen(PackerProblem* problem) {
 		if (boxPlaced) {
 			for (int i = 0; i < problem->length; i++) {
 				for (int j = 0; j < problem->width; j++) {
-					if (placeBox(problem, &problem->boxes[boxIndex], i, j)) {
+					if (placeBox(problem, &problem->boxes[boxIndex], j, i)) {
 												
-						stack.push(Coordinates({ j, i, &problem->boxes[boxIndex] }));
+						stack.push(Coordinates({ i, j, &problem->boxes[boxIndex] }));
 						boxPlaced = true;
 						boxIndex--;
 						i = problem->length;
@@ -310,7 +311,7 @@ void solveProblen(PackerProblem* problem) {
 			
 			for (int i = y; i < problem->length; i++) {
 				for (int j = x; j < problem->width; j++) {
-					if (placeBox(problem, &problem->boxes[boxIndex], i, j)) {
+					if (placeBox(problem, &problem->boxes[boxIndex], j, i)) {
 						
 						
 						stack.push(Coordinates({ j, i, &problem->boxes[boxIndex] }));
@@ -336,13 +337,30 @@ int main() {
 
 	PackerProblem* pC = loadPackerProblem("input.txt");
 	
-	//QuickSort<box>(pC->boxes, 0, pC->number_boxes);
+	QuickSort<box>(pC->boxes, 0, pC->number_boxes);
 
-	pC->printContainer();
+	/*pC->printContainer();
 
 	solveProblen(pC);
 	
-	pC->printContainer();
+	pC->printContainer();*/
 
+	high_resolution_clock::time_point start, finish;
+	duration<double> duration;
+	
+
+	for (int i = 0; i < 15; i++)
+	{
+		
+		start = high_resolution_clock::now();
+		for (int i = 0; i < 20000000; i++) {
+			removeBox(pC, &pC->boxes[24], 0, 0);
+		}
+		finish = high_resolution_clock::now();
+		duration = finish - start;
+		cout << duration.count() << "\n";
+		
+	}
+	
 
 }
