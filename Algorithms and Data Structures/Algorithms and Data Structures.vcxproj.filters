@@ -23,6 +23,9 @@
     <None Include="202223.CO1406.assignment.final.pdf">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\Benchmarking.xlsx">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt">

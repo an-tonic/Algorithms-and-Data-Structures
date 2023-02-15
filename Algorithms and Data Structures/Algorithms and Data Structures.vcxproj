@@ -133,6 +133,7 @@
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Benchmarking.xlsx" />
     <None Include="202223.CO1406.assignment.final.pdf" />
   </ItemGroup>
   <ItemGroup>
