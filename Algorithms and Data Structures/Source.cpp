@@ -229,7 +229,8 @@ bool placeBox(PackerProblem* problem, box* box, int x, int y) {
 	bool canBePlaced = true;
 	int xBounds = x + box->width;
 	int yBounds = y + box->length;
-
+	int down = box->length;
+	char name = box->name;
 	//Check that box is in contqiner bounds
 	if (xBounds > problem->width || yBounds > problem->length) {
 		return !canBePlaced;
@@ -238,7 +239,8 @@ bool placeBox(PackerProblem* problem, box* box, int x, int y) {
 	//Check that the space for the box is empty
 	for (int i = x; i < xBounds; i++) {
 		for (int j = y; j < yBounds; j++) {
-			if (problem->container[i][j] != '0') {
+			//TODO change value to "0"
+			if (problem->container[i][j] < 1) {
 				return !canBePlaced;
 			}
 		}
@@ -246,10 +248,10 @@ bool placeBox(PackerProblem* problem, box* box, int x, int y) {
 	
 	//Placing the box in the container
 	for (int i = x; i < xBounds; i++) {
-		for (int j = y; j < yBounds; j++) {					
-			problem->container[i][j] = box->name;
-		}
+		memset(&problem->container[i][y], name, down);
 	}
+
+
 	return canBePlaced;
 }
 
@@ -354,7 +356,7 @@ int main() {
 		
 		start = high_resolution_clock::now();
 		for (int i = 0; i < 20000000; i++) {
-			removeBox(pC, &pC->boxes[24], 0, 0);
+			placeBox(pC, &pC->boxes[24], 1, 4);
 		}
 		finish = high_resolution_clock::now();
 		duration = finish - start;
