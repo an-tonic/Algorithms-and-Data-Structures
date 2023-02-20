@@ -41,7 +41,7 @@ struct Stack {
         if (!isEmpty()) {
             cout << "Printing stack from the top\n";
             for (int i = _top - 1; i >= 0; i--) {
-                cout << _data[i] << "\n";
+                cout << _data[i].x << ", " << _data[i].y << " " << _data[i].boxPlaced->name << "\n";
             }
             cout << "-----------\n\n";
         }

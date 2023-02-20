@@ -232,19 +232,19 @@ bool placeBox(PackerProblem* problem, box* box, int x, int y) {
 	int down = box->length;
 	char name = box->name;
 	//Check that box is in contqiner bounds
-	if (xBounds > problem->width || yBounds > problem->length) {
+	/*if (xBounds > problem->width || yBounds > problem->length) {
 		return !canBePlaced;
-	}
+	}*/
 	
 	//Check that the space for the box is empty
-	for (int i = x; i < xBounds; i++) {
-		for (int j = y; j < yBounds; j++) {
-			//TODO change value to "0"
-			if (problem->container[i][j] < 1) {
-				return !canBePlaced;
-			}
-		}
-	}
+	//for (int i = x; i < xBounds; i++) {
+	//	for (int j = y; j < yBounds; j++) {
+	//		//TODO change value to "0"
+	//		if (problem->container[i][j] < 1) {
+	//			return !canBePlaced;
+	//		}
+	//	}
+	//}
 	
 	//Placing the box in the container
 	for (int i = x; i < xBounds; i++) {
@@ -265,29 +265,41 @@ void removeBox(PackerProblem* problem, box* box, int x, int y) {
 	}
 }
 
+bool boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToCheck, int x, int y) {
+	int width = boxToCheck->width;
+	int length = boxToCheck->length;
+
+	if (x + width > problem->width || y + length > problem->length) {
+		return true;
+	}
+
+	for (size_t i = 0; i < pStack->_top; i++) {		
+		if (x > pStack->_data[i].x - width && x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width) {
+			if (y > pStack->_data[i].y - length && y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length){
+				return true;
+			}			
+		}	
+	}
+	return false;
+}
+
 void solveProblen(PackerProblem* problem) {
 	Stack<Coordinates> stack;
 
 	int boxIndex = problem->number_boxes-1;
 	bool boxPlaced = true;
-	
 
-	stack.push(Coordinates{ 0,0, &problem->boxes[problem->number_boxes - 1] });
-	
-	placeBox(problem, &problem->boxes[boxIndex], 0, 0);
-	boxIndex--;
-	
-
-	while (!stack.isEmpty()){
+	while (true){
 
 		
 		
 		if (boxPlaced) {
 			for (int i = 0; i < problem->length; i++) {
 				for (int j = 0; j < problem->width; j++) {
-					if (placeBox(problem, &problem->boxes[boxIndex], j, i)) {
-												
-						stack.push(Coordinates({ i, j, &problem->boxes[boxIndex] }));
+					if (!boxCollided(problem, &stack, &problem->boxes[boxIndex], j, i)) {
+						
+						stack.push(Coordinates({ j, i, &problem->boxes[boxIndex] }));
+					
 						boxPlaced = true;
 						boxIndex--;
 						i = problem->length;
@@ -302,21 +314,17 @@ void solveProblen(PackerProblem* problem) {
 		if (!boxPlaced) {
 			
 
-			removeBox(problem, stack.top().boxPlaced, stack.top().x, stack.top().y);
+			//removeBox(problem, stack.top().boxPlaced, stack.top().x, stack.top().y);
 			int x = stack.top().x + 1;
-			int y = stack.top().y;
-			
-			
-			
+			int y = stack.top().y;		
 			stack.pop();
 			boxIndex++;
 			
 			for (int i = y; i < problem->length; i++) {
 				for (int j = x; j < problem->width; j++) {
-					if (placeBox(problem, &problem->boxes[boxIndex], j, i)) {
-						
-						
+					if (!boxCollided(problem, &stack, &problem->boxes[boxIndex], j, i)) {											
 						stack.push(Coordinates({ j, i, &problem->boxes[boxIndex] }));
+						
 						i = problem->length;
 						j = problem->width;
 						boxPlaced = true;
@@ -329,7 +337,14 @@ void solveProblen(PackerProblem* problem) {
 			
 		}
 		
-		if (boxIndex == -1) return;
+		if (boxIndex == -1) {
+			for (size_t i = 0; i < stack._top; i++) {
+				Coordinates tmp = stack._data[i];
+				placeBox(problem, tmp.boxPlaced, tmp.x, tmp.y);
+				
+			}
+			return;
+		}
 		
 	}
 }
@@ -341,28 +356,32 @@ int main() {
 	
 	QuickSort<box>(pC->boxes, 0, pC->number_boxes);
 
-	/*pC->printContainer();
+	pC->printContainer();
 
 	solveProblen(pC);
 	
-	pC->printContainer();*/
+	pC->printContainer();
+
+	/*Stack<Coordinates> stack;
+	for (int i = 0; i < 25; i++) {
+		stack.push(Coordinates{ 0, 0, &pC->boxes[24] });
+	}
 
 	high_resolution_clock::time_point start, finish;
 	duration<double> duration;
 	
 
-	for (int i = 0; i < 15; i++)
+	for (int j = 0; j < 15; j++)
 	{
 		
 		start = high_resolution_clock::now();
 		for (int i = 0; i < 20000000; i++) {
-			placeBox(pC, &pC->boxes[24], 1, 4);
+			boxCollided(pC, &stack, &pC->boxes[24], 8, 8);
 		}
 		finish = high_resolution_clock::now();
 		duration = finish - start;
 		cout << duration.count() << "\n";
 		
-	}
+	}*/
 	
-
 }

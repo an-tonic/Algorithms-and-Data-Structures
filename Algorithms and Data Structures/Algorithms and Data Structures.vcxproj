@@ -138,6 +138,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt" />
+    <Text Include="smallinput.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Lab\Lab\Stack.h" />
