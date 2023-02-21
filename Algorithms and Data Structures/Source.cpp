@@ -42,10 +42,6 @@ typedef struct box {
 	unsigned char length;
 	unsigned char name;
 
-	int boxArea() {
-		return ((int)width * (int)length);
-	}
-
 	// Operator Overloadings on area of the boxes
 
 	bool operator >(const box& bx) {
@@ -136,6 +132,10 @@ typedef struct PackerProblem {
 	};
 };
 
+int boxArea(box* box) {
+	return (box->width * box->length);
+}
+
 PackerProblem* loadPackerProblem(string filename) {
 	PackerProblem* problem = new PackerProblem();
 	ifstream file(filename);
@@ -201,7 +201,7 @@ PackerProblem* loadPackerProblem(string filename) {
 		getline(file, newLine, '\n');
 		problem->boxes[counter].name = newLine[0];
 
-		sumAreaBoxes = sumAreaBoxes + problem->boxes[counter].boxArea();
+		sumAreaBoxes = sumAreaBoxes + boxArea(&problem->boxes[counter]);
 		counter++;
 	}
 
@@ -225,101 +225,86 @@ PackerProblem* loadPackerProblem(string filename) {
 	return problem;
 }
 
-bool placeBox(PackerProblem* problem, box* box, int x, int y) {
-	bool canBePlaced = true;
+void placeBox(PackerProblem* problem, box* box, int x, int y) {
+
 	int xBounds = x + box->width;
-	int yBounds = y + box->length;
 	int down = box->length;
 	char name = box->name;
-	//Check that box is in contqiner bounds
-	/*if (xBounds > problem->width || yBounds > problem->length) {
-		return !canBePlaced;
-	}*/
-	
-	//Check that the space for the box is empty
-	//for (int i = x; i < xBounds; i++) {
-	//	for (int j = y; j < yBounds; j++) {
-	//		//TODO change value to "0"
-	//		if (problem->container[i][j] < 1) {
-	//			return !canBePlaced;
-	//		}
-	//	}
-	//}
 	
 	//Placing the box in the container
 	for (int i = x; i < xBounds; i++) {
 		memset(&problem->container[i][y], name, down);
 	}
 
-
-	return canBePlaced;
-}
-
-void removeBox(PackerProblem* problem, box* box, int x, int y) {
-	int right = x + box->width;
-	int down = box->length;
-
-
-	for (size_t i = x; i < right; i++) {
-		memset(&problem->container[i][y], '0', down);
-	}
 }
 
 bool boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToCheck, int x, int y) {
 	int width = boxToCheck->width;
 	int length = boxToCheck->length;
 
-	if (x + width > problem->width || y + length > problem->length) {
-		return true;
-	}
-
 	for (size_t i = 0; i < pStack->_top; i++) {		
-		if (x > pStack->_data[i].x - width && x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width) {
-			if (y > pStack->_data[i].y - length && y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length){
-				return true;
-			}			
-		}	
+		if (x > pStack->_data[i].x - width 
+			&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width 
+			&& y > pStack->_data[i].y - length 
+			&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length) 
+		{			
+				return true;						
+		}
+		
 	}
 	return false;
 }
 
-void solveProblen(PackerProblem* problem) {
+
+void rotateBox(box* box) {
+	int tmp = box->length;
+	box->length = box->width;
+	box->width = tmp;
+}
+
+void solveProblem(PackerProblem* problem) {
 	Stack<Coordinates> stack;
 
 	int boxIndex = problem->number_boxes-1;
-	bool boxPlaced = true;
+	bool boxPlaced = false;
 	int x = 0;
 	int y = 0;
-	while (boxIndex > -1){
+	unsigned short length = problem->length;
+	unsigned short width = problem->width;
 
-		for (int i = y; i < problem->length && !boxPlaced; i++) {
-			for (int j = x; j < problem->width && !boxPlaced; j++) {
-				if (!boxCollided(problem, &stack, &problem->boxes[boxIndex], j, i)) {						
-					stack.push(Coordinates({ j, i, &problem->boxes[boxIndex] }));					
+	while (boxIndex > -1){
+		box* tmp = &problem->boxes[boxIndex];
+		for (int i = y; !boxPlaced && i < length - tmp->length + 1; i++) {
+			for (int j = x; !boxPlaced && j < width - tmp->width + 1; j++) {
+				if (!boxCollided(problem, &stack, tmp, j, i)) {						
+					stack.push(Coordinates({ j, i, tmp }));					
 					boxPlaced = true;
 					boxIndex--;						
-				}					
+				}				
 			}
 			x = 0;
 		}
+
+		//rotateBox(tmp);
+
+		
+
 		x = 0;
 		y = 0;
 
-		if (!boxPlaced) {
-						
+		if (!boxPlaced) {						
 			x = stack.top().x + 1;
 			y = stack.top().y;		
 			stack.pop();
-			boxIndex++;
-			
+			boxIndex++;			
 		}
 		boxPlaced = false;
 
 	}
 
 	for (size_t i = 0; i < stack._top; i++) {
-		Coordinates tmp = stack._data[i];
-		placeBox(problem, tmp.boxPlaced, tmp.x, tmp.y);
+		
+		placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
 
 	}
 }
@@ -327,44 +312,43 @@ void solveProblen(PackerProblem* problem) {
 
 int main() {
 
-	PackerProblem* pC = loadPackerProblem("input.txt");
-	
-	QuickSort<box>(pC->boxes, 0, pC->number_boxes);
+	//PackerProblem* pC = loadPackerProblem("mediuminput.txt");
 
-	pC->printContainer();
+	////QuickSort<box>(pC->boxes, 0, pC->number_boxes);
+
+	//pC->printContainer();
+
+	//high_resolution_clock::time_point start, finish;
+	//duration<double> duration;
+	//start = high_resolution_clock::now();
+
+	//solveProblem(pC);
+
+
+
+	//finish = high_resolution_clock::now();
+	//duration = finish - start;
+	//cout << duration.count() << "\n";
+	//pC->printContainer();
+	
+
+	PackerProblem* pC = loadPackerProblem("mediuminput.txt");
 
 	high_resolution_clock::time_point start, finish;
 	duration<double> duration;
-	start = high_resolution_clock::now();
 
-	solveProblen(pC);
-	
-	pC->printContainer();
-
-	finish = high_resolution_clock::now();
-	duration = finish - start;
-	cout << duration.count() << "\n";
-
-	/*Stack<Coordinates> stack;
-	for (int i = 0; i < 25; i++) {
-		stack.push(Coordinates{ 0, 0, &pC->boxes[24] });
-	}
-
-	high_resolution_clock::time_point start, finish;
-	duration<double> duration;
-	
 
 	for (int j = 0; j < 15; j++)
 	{
-		
+
 		start = high_resolution_clock::now();
-		for (int i = 0; i < 20000000; i++) {
-			boxCollided(pC, &stack, &pC->boxes[24], 8, 8);
+		for (int i = 0; i < 200000; i++) {
+			solveProblem(pC);
 		}
 		finish = high_resolution_clock::now();
 		duration = finish - start;
 		cout << duration.count() << "\n";
-		
-	}*/
+
+	}
 	
 }
