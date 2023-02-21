@@ -34,6 +34,9 @@
     <Text Include="smallinput.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="mediuminput.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Lab\Lab\Stack.h">

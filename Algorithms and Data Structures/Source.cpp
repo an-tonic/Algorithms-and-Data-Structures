@@ -288,64 +288,39 @@ void solveProblen(PackerProblem* problem) {
 
 	int boxIndex = problem->number_boxes-1;
 	bool boxPlaced = true;
+	int x = 0;
+	int y = 0;
+	while (boxIndex > -1){
 
-	while (true){
-
-		
-		
-		if (boxPlaced) {
-			for (int i = 0; i < problem->length; i++) {
-				for (int j = 0; j < problem->width; j++) {
-					if (!boxCollided(problem, &stack, &problem->boxes[boxIndex], j, i)) {
-						
-						stack.push(Coordinates({ j, i, &problem->boxes[boxIndex] }));
-					
-						boxPlaced = true;
-						boxIndex--;
-						i = problem->length;
-						j = problem->width;
-					}
-					else {
-						boxPlaced = false;
-					}
-				}
+		for (int i = y; i < problem->length && !boxPlaced; i++) {
+			for (int j = x; j < problem->width && !boxPlaced; j++) {
+				if (!boxCollided(problem, &stack, &problem->boxes[boxIndex], j, i)) {						
+					stack.push(Coordinates({ j, i, &problem->boxes[boxIndex] }));					
+					boxPlaced = true;
+					boxIndex--;						
+				}					
 			}
+			x = 0;
 		}
-		if (!boxPlaced) {
-			
+		x = 0;
+		y = 0;
 
-			//removeBox(problem, stack.top().boxPlaced, stack.top().x, stack.top().y);
-			int x = stack.top().x + 1;
-			int y = stack.top().y;		
+		if (!boxPlaced) {
+						
+			x = stack.top().x + 1;
+			y = stack.top().y;		
 			stack.pop();
 			boxIndex++;
 			
-			for (int i = y; i < problem->length; i++) {
-				for (int j = x; j < problem->width; j++) {
-					if (!boxCollided(problem, &stack, &problem->boxes[boxIndex], j, i)) {											
-						stack.push(Coordinates({ j, i, &problem->boxes[boxIndex] }));
-						
-						i = problem->length;
-						j = problem->width;
-						boxPlaced = true;
-						boxIndex--;
-					}
-				}
-				x = 0;
-			}
-			
-			
 		}
-		
-		if (boxIndex == -1) {
-			for (size_t i = 0; i < stack._top; i++) {
-				Coordinates tmp = stack._data[i];
-				placeBox(problem, tmp.boxPlaced, tmp.x, tmp.y);
-				
-			}
-			return;
-		}
-		
+		boxPlaced = false;
+
+	}
+
+	for (size_t i = 0; i < stack._top; i++) {
+		Coordinates tmp = stack._data[i];
+		placeBox(problem, tmp.boxPlaced, tmp.x, tmp.y);
+
 	}
 }
 
@@ -358,9 +333,17 @@ int main() {
 
 	pC->printContainer();
 
+	high_resolution_clock::time_point start, finish;
+	duration<double> duration;
+	start = high_resolution_clock::now();
+
 	solveProblen(pC);
 	
 	pC->printContainer();
+
+	finish = high_resolution_clock::now();
+	duration = finish - start;
+	cout << duration.count() << "\n";
 
 	/*Stack<Coordinates> stack;
 	for (int i = 0; i < 25; i++) {
