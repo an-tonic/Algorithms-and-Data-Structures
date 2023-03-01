@@ -43,7 +43,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -138,8 +138,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt" />
-    <Text Include="mediuminput.txt" />
-    <Text Include="smallinput.txt" />
+    <Text Include="3input.txt" />
+    <Text Include="2input.txt" />
+    <Text Include="1input.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Lab\Lab\Stack.h" />

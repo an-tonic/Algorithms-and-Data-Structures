@@ -30,14 +30,11 @@ void check_int(string* str) {
 	}
 }
 
-
 //Abstract data types
 /// <summary>
 /// A box to be placed in the container. Has three dimentions: width, length, and name.
 /// </summary>
 typedef struct box {
-
-
 	unsigned char width;
 	unsigned char length;
 	unsigned char name;
@@ -238,31 +235,152 @@ void placeBox(PackerProblem* problem, box* box, int x, int y) {
 
 }
 
-bool boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToCheck, int x, int y) {
-	int width = boxToCheck->width;
-	int length = boxToCheck->length;
-
-	for (size_t i = 0; i < pStack->_top; i++) {		
-		if (x > pStack->_data[i].x - width 
-			&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width 
-			&& y > pStack->_data[i].y - length 
-			&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length) 
-		{			
-				return true;						
-		}
-		
-	}
-	return false;
-}
-
-
 void rotateBox(box* box) {
 	int tmp = box->length;
 	box->length = box->width;
 	box->width = tmp;
+	cout << "r";
 }
 
-void solveProblem(PackerProblem* problem) {
+bool boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToCheck, int* px, int* py) {
+	int width = boxToCheck->width;
+	int length = boxToCheck->length;
+	int x = *px;
+	int y = *py;
+	//inside the container
+	if (x + width <= problem->width && y + length <= problem->length) {
+		//inside the container while rotated
+		if (x + length < problem->width && y + width < problem->length) {
+			for (size_t i = 0; i < pStack->_top; i++) {
+				if (x > pStack->_data[i].x - width
+					&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
+					&& y > pStack->_data[i].y - length
+					&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length && width != length){
+					//still collides while rotated
+					if (x > pStack->_data[i].x - length
+						&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
+						&& y > pStack->_data[i].y - width
+						&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length) {
+						*px += pStack->_data[i].boxPlaced->width-1;
+						return true;
+
+					}
+					//need to recheck that the rotated box does not collide with any of the boxes
+					else {
+						for (size_t j = 0; j < pStack->_top; j++) {
+							if (x > pStack->_data[i].x - length
+								&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
+								&& y > pStack->_data[i].y - width
+								&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
+							{
+								*px += pStack->_data[i].boxPlaced->width-1;
+								return true;
+							}
+						}
+						rotateBox(boxToCheck);
+						
+						return false;
+					}
+				}
+			}
+			return false;
+		}
+		//outside of the container while rotated
+		else {
+			//do regular collision detection
+			for (size_t i = 0; i < pStack->_top; i++) {
+				if (x > pStack->_data[i].x - width
+					&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
+					&& y > pStack->_data[i].y - length
+					&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
+				{
+					*px += pStack->_data[i].boxPlaced->width-1;
+					return true;
+				}
+			}
+			//did not collide
+			return false;
+		}
+	}
+	//outside of the container
+	else {
+		//inside the container while rotated
+		if (x + length <= problem->width && y + width <= problem->length) {
+			//colledes with all the boxes while rotated
+			for (size_t i = 0; i < pStack->_top; i++) {
+				if (x > pStack->_data[i].x - length
+					&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
+					&& y > pStack->_data[i].y - width
+					&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
+				{	
+					*px += pStack->_data[i].boxPlaced->width-1;
+					return true;
+				}
+			}
+			//did not collide with all of the boxes while rotated
+			rotateBox(boxToCheck);
+			
+			return false;
+		}
+		//outside of the container even if rotated
+		else {
+			return true;
+		}
+	}
+	return true;
+}
+
+//TODO Delete (Depreciated or under development)
+bool __boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToCheck, int* px, int* py) {
+	int width = boxToCheck->width;
+	int length = boxToCheck->length;
+	int x = *px;
+	int y = *py;
+	
+
+
+	for (size_t i = 0; i < pStack->_top; i++) {
+
+		if (x > pStack->_data[i].x - width
+			&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
+			&& y > pStack->_data[i].y - length
+			&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
+		{
+			/**px += pStack->_data[i].boxPlaced->width - 1;*/
+			if (x > pStack->_data[i].x - length
+				&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
+				&& y > pStack->_data[i].y - width
+				&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length) {
+				*px += pStack->_data[i].boxPlaced->width - 1;
+				return true;
+
+			} 
+
+		}
+	}
+	
+
+
+	return true;
+}
+bool _boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToCheck, int* px, int* py) {
+	int width = boxToCheck->width;
+	int length = boxToCheck->length;
+	int x = *px;
+	int y = *py;
+	for (size_t i = 0; i < pStack->_top; i++) {
+		if (x > pStack->_data[i].x - width
+			&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
+			&& y > pStack->_data[i].y - length
+			&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
+		{	
+			*px += pStack->_data[i].boxPlaced->width - 1;
+			return true;
+		}
+	}
+	return false;
+}
+void _solveProblem(PackerProblem* problem) {
 	Stack<Coordinates> stack;
 
 	int boxIndex = problem->number_boxes-1;
@@ -274,25 +392,20 @@ void solveProblem(PackerProblem* problem) {
 
 	while (boxIndex > -1){
 		box* tmp = &problem->boxes[boxIndex];
-		for (int i = y; !boxPlaced && i < length - tmp->length + 1; i++) {
+		for (int i = y; !boxPlaced && i < length - tmp->length + 1 ; i++) {
 			for (int j = x; !boxPlaced && j < width - tmp->width + 1; j++) {
-				if (!boxCollided(problem, &stack, tmp, j, i)) {						
+				if (!_boxCollided(problem, &stack, tmp, &j, &i)) {						
 					stack.push(Coordinates({ j, i, tmp }));					
 					boxPlaced = true;
 					boxIndex--;						
 				}				
 			}
-			x = 0;
 		}
-
-		//rotateBox(tmp);
-
-		
 
 		x = 0;
 		y = 0;
 
-		if (!boxPlaced) {						
+		if (!boxPlaced) {
 			x = stack.top().x + 1;
 			y = stack.top().y;		
 			stack.pop();
@@ -309,46 +422,100 @@ void solveProblem(PackerProblem* problem) {
 	}
 }
 
+void solveProblem(PackerProblem* problem) {
+	Stack<Coordinates> stack;
+
+	int boxIndex = problem->number_boxes - 1;
+	bool boxPlaced = false;
+	int x = 0;
+	int y = 0;
+	unsigned short length = problem->length;
+	unsigned short width = problem->width;
+
+	while (boxIndex > -1) {
+		box* tmp = &problem->boxes[boxIndex];
+		for (int i = y; !boxPlaced && i < length; i++) {
+			for (int j = x; !boxPlaced && j < width; j++) {
+				if (!boxCollided(problem, &stack, tmp, &j, &i)) {
+					stack.push(Coordinates({ j, i, tmp }));
+					boxPlaced = true;
+					boxIndex--;
+				}
+			}
+		}
+
+		x = 0;
+		y = 0;
+
+		if (!boxPlaced) {
+			
+			x = stack.top().x + 1;
+			y = stack.top().y;
+			stack.pop();
+			boxIndex++;
+		}
+		boxPlaced = false;
+
+	}
+
+	for (size_t i = 0; i < stack._top; i++) {
+
+		placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
+
+	}
+}
 
 int main() {
 
-	//PackerProblem* pC = loadPackerProblem("mediuminput.txt");
+	if (true) {
+		PackerProblem* pC = loadPackerProblem("3input.txt");
 
-	////QuickSort<box>(pC->boxes, 0, pC->number_boxes);
+		QuickSort<box>(pC->boxes, 0, pC->number_boxes);
 
-	//pC->printContainer();
+		pC->printContainer();
 
-	//high_resolution_clock::time_point start, finish;
-	//duration<double> duration;
-	//start = high_resolution_clock::now();
-
-	//solveProblem(pC);
-
-
-
-	//finish = high_resolution_clock::now();
-	//duration = finish - start;
-	//cout << duration.count() << "\n";
-	//pC->printContainer();
-	
-
-	PackerProblem* pC = loadPackerProblem("mediuminput.txt");
-
-	high_resolution_clock::time_point start, finish;
-	duration<double> duration;
-
-
-	for (int j = 0; j < 15; j++)
-	{
-
+		high_resolution_clock::time_point start, finish;
+		duration<double> duration;
 		start = high_resolution_clock::now();
-		for (int i = 0; i < 200000; i++) {
-			solveProblem(pC);
-		}
+
+		solveProblem(pC);
+
 		finish = high_resolution_clock::now();
 		duration = finish - start;
 		cout << duration.count() << "\n";
+		pC->printContainer();
+	
+	} else {
+
+		PackerProblem* pC = loadPackerProblem("mediuminput.txt");
+		QuickSort<box>(pC->boxes, 0, pC->number_boxes);
+
+
+		high_resolution_clock::time_point start, finish;
+		duration<double> duration;
+
+
+		for (int j = 0; j < 15; j++){
+			start = high_resolution_clock::now();
+			for (int i = 0; i < 200000; i++) {
+				_solveProblem(pC);
+			}
+			finish = high_resolution_clock::now();
+			duration = finish - start;
+			cout << duration.count() << "\n";
+
+		}
+		cout << "\nWith rotation\n";
+		for (int j = 0; j < 15; j++) {
+			start = high_resolution_clock::now();
+			for (int i = 0; i < 200000; i++) {
+				solveProblem(pC);
+			}
+			finish = high_resolution_clock::now();
+			duration = finish - start;
+			cout << duration.count() << "\n";
+
+		}
 
 	}
-	
 }
