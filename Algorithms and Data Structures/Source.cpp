@@ -275,24 +275,24 @@ bool boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToC
 			&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
 		{
 			//if collided, check that maybe the rotated box would not collide
-			if (width != length && x + length < problem->width && y + width < problem->length) {
-				for (size_t j = 0; j < pStack->_top; j++) 
-				{	
-					//Rotated collision
-					if (x > pStack->_data[j].x - length
-						&& x < pStack->_data[j].x + pStack->_data[j].boxPlaced->width
-						&& y > pStack->_data[j].y - width
-						&& y < pStack->_data[j].y + pStack->_data[j].boxPlaced->length)
-					{
-						*px += pStack->_data[i].boxPlaced->width - 1;
-						return true;
-					}
-				}
+			//if (width != length && x + length < problem->width && y + width < problem->length) {
+			//	for (size_t j = 0; j < pStack->_top; j++) 
+			//	{	
+			//		//Rotated collision
+			//		if (x > pStack->_data[j].x - length
+			//			&& x < pStack->_data[j].x + pStack->_data[j].boxPlaced->width
+			//			&& y > pStack->_data[j].y - width
+			//			&& y < pStack->_data[j].y + pStack->_data[j].boxPlaced->length)
+			//		{
+			//			*px += pStack->_data[i].boxPlaced->width - 1;
+			//			return true;
+			//		}
+			//	}
+			//	rotateBox(boxToCheck);
+			//	return false;
+			//}
 
-				rotateBox(boxToCheck);
-				return false;
-			}
-			//The box has same sides and collided - return
+			//The box has collided - return
 			*px += pStack->_data[i].boxPlaced->width - 1;
 			return true;
 		}
@@ -467,9 +467,9 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 		for (size_t i = 0; i < stack._top; i++) {
 			placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
 		}
-		problem->printContainer();
+		problem->printContainer();*/
 
-		solver->steps++;*/
+		solver->steps++;
 		boxPlaced = false;
 		
 		currentBox = &problem->boxes[boxIndex];
@@ -491,11 +491,11 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 		}
 		y = 0;
 
+		//Bug: infinite loop. Possible solution bool rotation in the stack? Biniary sm
 		if (solveAll && !boxPlaced && boxIndex == problem->number_boxes - 1) {
-			cout << "Found " << solver->numberOfSolutions << " the solutions!\n";
+			cout << "Found " << solver->numberOfSolutions << " of all of the solutions!\n";
 			break;
-		}
-		if (solveAll && boxIndex == -1) {
+		} else if (solveAll && boxIndex == -1) {
 			solver->numberOfSolutions++;
 			cleanContainer(problem);
 
@@ -507,8 +507,7 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 			y = stack.top().y;
 			stack.pop();
 			boxIndex++;
-		}
-
+		} 
 		
 		if (!boxPlaced && boxRotated) {
 		
@@ -519,21 +518,20 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 			x = stack.top().x + 1;
 			y = stack.top().y;
 			stack.pop();
-			boxIndex++;	
-			
-		}
+			boxIndex++;
 
-		if (!boxPlaced && !boxRotated) {
+		} else if (!boxPlaced && !boxRotated && currentBox->length != currentBox->width) {
+			rotateBox(currentBox);
+			boxRotated = true;
+		} else if (!boxPlaced  && currentBox->length == currentBox->width) {
 			x = stack.top().x + 1;
 			y = stack.top().y;
 			stack.pop();
 			boxIndex++;
 		}
+
 		
-		if (!boxPlaced && !boxRotated && currentBox->length != currentBox->width) {
-			rotateBox(currentBox);
-			boxRotated = true;
-		}
+
 	}
 
 	for (size_t i = 0; i < stack._top; i++) {
@@ -546,9 +544,9 @@ int main() {
 	if (true) {
 		PackerSolver* pSolver = new PackerSolver();
 		
-		pSolver->pProblem = loadPackerProblem("1input.txt");
+		pSolver->pProblem = loadPackerProblem("2input.txt");
 
-		//QuickSort<box>(pSolver->pProblem->boxes, 0, pSolver->pProblem->number_boxes);
+		QuickSort<box>(pSolver->pProblem->boxes, 0, pSolver->pProblem->number_boxes);
 
 		high_resolution_clock::time_point start, finish;
 		duration<double> duration;
@@ -559,7 +557,7 @@ int main() {
 		finish = high_resolution_clock::now();
 		duration = finish - start;
 
-		pSolver->pProblem->printContainer();
+		//pSolver->pProblem->printContainer();
 
 		cout << duration.count() << "\n";
 
