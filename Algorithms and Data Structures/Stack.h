@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#define MAX_SIZE 25
+#define MAX_SIZE 250
 
 using std::cout;
 

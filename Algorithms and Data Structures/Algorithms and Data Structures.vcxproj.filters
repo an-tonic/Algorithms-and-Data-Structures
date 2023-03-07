@@ -26,6 +26,9 @@
     <None Include="..\Benchmarking.xlsx">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Report.docx">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt">

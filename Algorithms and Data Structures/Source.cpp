@@ -38,27 +38,12 @@ typedef struct box {
 	unsigned char length;
 	unsigned char name;
 
-	// Operator Overloadings on area of the boxes
-
-	bool operator >(const box& bx) {
-		return width*length > bx.width * bx.length;
-	}
-
-	bool operator <(const box& bx) {
-		return width * length < bx.width * bx.length;
-	}
-
-	bool operator ==(const box& bx) {
-		return width * length == bx.width * bx.length;
-	}
+	// Operator Overloadings on area of the boxes for the Quicksort Algorithm
 
 	bool operator <=(const box& bx) {
 		return width * length <= bx.width * bx.length;
 	}
 
-	bool operator >=(const box& bx) {
-		return width * length >= bx.width * bx.length;
-	}
 };
 
 
@@ -200,11 +185,17 @@ PackerProblem* loadPackerProblem(string filename) {
 		getline(file, newLine, ' ');
 		check_int(&newLine);
 		problem->boxes[counter].width = stoi(newLine);
-
+		if (problem->boxes[counter].width > problem->width || problem->boxes[counter].width > problem->length) {
+			cout << "The box on line " << counter + 4 << " would not fit into the container.\n Terminating...\n";
+			exit(4);
+		}
 		getline(file, newLine, ' ');
 		check_int(&newLine);
 		problem->boxes[counter].length = stoi(newLine);
-
+		if (problem->boxes[counter].length > problem->width || problem->boxes[counter].length > problem->length) {
+			cout << "The box on line " << counter + 4 << " would not fit into the container.\n Terminating...\n";
+			exit(4);
+		}
 		//No input checks for the name. We expect any char.
 		getline(file, newLine, '\n');
 		problem->boxes[counter].name = newLine[0];
@@ -274,26 +265,8 @@ bool boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToC
 			&& y > pStack->_data[i].y - length
 			&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
 		{
-			//if collided, check that maybe the rotated box would not collide
-			//if (width != length && x + length < problem->width && y + width < problem->length) {
-			//	for (size_t j = 0; j < pStack->_top; j++) 
-			//	{	
-			//		//Rotated collision
-			//		if (x > pStack->_data[j].x - length
-			//			&& x < pStack->_data[j].x + pStack->_data[j].boxPlaced->width
-			//			&& y > pStack->_data[j].y - width
-			//			&& y < pStack->_data[j].y + pStack->_data[j].boxPlaced->length)
-			//		{
-			//			*px += pStack->_data[i].boxPlaced->width - 1;
-			//			return true;
-			//		}
-			//	}
-			//	rotateBox(boxToCheck);
-			//	return false;
-			//}
-
 			//The box has collided - return
-			*px += pStack->_data[i].boxPlaced->width - 1;
+			*px = pStack->_data[i].x + pStack->_data[i].boxPlaced->width - 1;
 			return true;
 		}
 	}
@@ -462,6 +435,7 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 	box* currentBox;
 
 	while (boxIndex > -1) {
+		//debug. delete later
 		/*cleanContainer(problem);
 
 		for (size_t i = 0; i < stack._top; i++) {
@@ -491,8 +465,8 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 		}
 		y = 0;
 
-		//Bug: infinite loop. Possible solution bool rotation in the stack? Biniary sm
-		if (solveAll && !boxPlaced && boxIndex == problem->number_boxes - 1) {
+		//Bug: infinite loop. Possible solution bool rotation in the stack? Biniary sm?
+		if (solveAll && !boxPlaced && boxIndex == problem->number_boxes - 1 && boxRotated) {
 			cout << "Found " << solver->numberOfSolutions << " of all of the solutions!\n";
 			break;
 		} else if (solveAll && boxIndex == -1) {
@@ -511,7 +485,7 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 		
 		if (!boxPlaced && boxRotated) {
 		
-			//"unrotate the box
+			//"unrotate" the box
 			rotateBox(currentBox);
 			boxRotated = false;
 		
@@ -529,9 +503,6 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 			stack.pop();
 			boxIndex++;
 		}
-
-		
-
 	}
 
 	for (size_t i = 0; i < stack._top; i++) {
@@ -541,10 +512,11 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 
 int main() {
 
+	//testing single case
 	if (true) {
 		PackerSolver* pSolver = new PackerSolver();
 		
-		pSolver->pProblem = loadPackerProblem("2input.txt");
+		pSolver->pProblem = loadPackerProblem("input.txt");
 
 		QuickSort<box>(pSolver->pProblem->boxes, 0, pSolver->pProblem->number_boxes);
 
@@ -552,12 +524,12 @@ int main() {
 		duration<double> duration;
 		start = high_resolution_clock::now();
 
-		solveProblem(pSolver->pProblem, pSolver, true);
+		solveProblem(pSolver->pProblem, pSolver, !true);
 
 		finish = high_resolution_clock::now();
 		duration = finish - start;
 
-		//pSolver->pProblem->printContainer();
+		pSolver->pProblem->printContainer();
 
 		cout << duration.count() << "\n";
 
@@ -565,7 +537,9 @@ int main() {
 
 		
 	
-	} else {
+	} 
+	//testing avgtime
+	else {
 
 		/*PackerProblem* pC = loadPackerProblem("2input.txt");
 		QuickSort<box>(pC->boxes, 0, pC->number_boxes);

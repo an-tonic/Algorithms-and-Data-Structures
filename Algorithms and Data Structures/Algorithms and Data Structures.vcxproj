@@ -43,7 +43,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -135,6 +135,7 @@
   <ItemGroup>
     <None Include="..\Benchmarking.xlsx" />
     <None Include="202223.CO1406.assignment.final.pdf" />
+    <None Include="Report.docx" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt" />
