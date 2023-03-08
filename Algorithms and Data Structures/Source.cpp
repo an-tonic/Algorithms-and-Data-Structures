@@ -461,10 +461,10 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 	int boxIndex = problem->number_boxes - 1;
 	bool boxPlaced = false;
 	bool boxRotated = false;
-	int x = 0;
-	int y = 0;
-	unsigned short length = problem->length;
-	unsigned short width = problem->width;
+	T x = 0;
+	T y = 0;
+	T length = problem->length;
+	T width = problem->width;
 	box* currentBox;
 
 	while (boxIndex > -1) {
@@ -498,6 +498,7 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 		}
 		y = 0;
 
+
 		if (!boxPlaced && stack.isEmpty() && !solveAll) {
 			cout << "There is no solution!\n";
 			exit(5);
@@ -521,12 +522,14 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 			}
 			else {
 				solver->numberOfSolutions++;
+				//cout << "Found solution number " << solver->numberOfSolutions << ": \n";
+
 				/*cleanContainer(problem);
 
 				for (size_t i = 0; i < stack._top; i++) {
 					placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
 				}*/
-				cout << "Found solution number " << solver->numberOfSolutions << ": \n";
+				
 				//problem->printContainer();
 				x = stack.top().x + 1;
 				y = stack.top().y;
@@ -583,8 +586,8 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 		for (size_t i = 0; i < stack._top; i++) {
 			placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
 		}
-		problem->printContainer();
-		cout << solver->steps << " steps needed.\n";
+		/*problem->printContainer();
+		cout << solver->steps << " steps needed.\n";*/
 	}
 	
 
@@ -594,10 +597,10 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 int main() {
 
 	//testing single case
-	if (true) {
+	if (!true) {
 		PackerSolver* pSolver = new PackerSolver();
 
-		pSolver->pProblem = loadPackerProblem("3input.txt");
+		pSolver->pProblem = loadPackerProblem("1input.txt");
 
 		QuickSort<box>(pSolver->pProblem->boxes, 0, pSolver->pProblem->number_boxes);
 
@@ -618,8 +621,11 @@ int main() {
 	//testing avgtime
 	else {
 
-		/*PackerProblem* pC = loadPackerProblem("2input.txt");
-		QuickSort<box>(pC->boxes, 0, pC->number_boxes);
+		PackerSolver* pSolver = new PackerSolver();
+
+		pSolver->pProblem = loadPackerProblem("1input.txt");
+
+		QuickSort<box>(pSolver->pProblem->boxes, 0, pSolver->pProblem->number_boxes);
 
 
 		high_resolution_clock::time_point start, finish;
@@ -629,24 +635,12 @@ int main() {
 		for (int j = 0; j < 15; j++){
 			start = high_resolution_clock::now();
 			for (int i = 0; i < 2000000; i++) {
-				_solveProblem(pC);
+				solveProblem<unsigned short>(pSolver->pProblem, pSolver, !true);
 			}
 			finish = high_resolution_clock::now();
 			duration = finish - start;
 			cout << duration.count() << "\n";
 
 		}
-		cout << "\nWith complex rotation\n";
-		for (int j = 0; j < 15; j++) {
-			start = high_resolution_clock::now();
-			for (int i = 0; i < 2000000; i++) {
-				solveProblem(pC);
-			}
-			finish = high_resolution_clock::now();
-			duration = finish - start;
-			cout << duration.count() << "\n";
-
-		}*/
-
 	}
 }
