@@ -480,7 +480,7 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 		}
 		
 		//Bug: infinite loop. Possible solution bool rotation in the stack? Biniary sm?
-		if (solveAll && !boxPlaced && boxIndex == problem->number_boxes - 1 && (boxRotated || currentBox->length == currentBox->width)) {
+		if (solveAll && !boxPlaced && boxIndex == problem->number_boxes - 1) {
 			cout << "Found " << solver->numberOfSolutions << " of all of the solutions!\n";
 			break;
 		} else if (solveAll && boxIndex == -1) {
@@ -519,9 +519,15 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 		}
 	}
 
-	for (size_t i = 0; i < stack._top; i++) {
-		placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
+	if (!solveAll) {
+		for (size_t i = 0; i < stack._top; i++) {
+			placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
+		}
+		problem->printContainer();
+		cout << solver->steps << " steps needed.\n";
 	}
+	
+
 }
 
 int main() {
@@ -538,18 +544,14 @@ int main() {
 		duration<double> duration;
 		start = high_resolution_clock::now();
 
-		solveProblem<unsigned short>(pSolver->pProblem, pSolver, true);
+		solveProblem<unsigned short>(pSolver->pProblem, pSolver, !true);
 
 		finish = high_resolution_clock::now();
 		duration = finish - start;
 
-		pSolver->pProblem->printContainer();
+		
 
 		cout << duration.count() << "\n";
-
-		cout << pSolver->steps << " steps needed.\n";
-
-		
 	
 	} 
 	//testing avgtime
