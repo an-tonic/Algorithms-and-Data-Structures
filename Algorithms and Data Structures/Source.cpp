@@ -521,12 +521,12 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 			}
 			else {
 				solver->numberOfSolutions++;
-				cleanContainer(problem);
+				/*cleanContainer(problem);
 
 				for (size_t i = 0; i < stack._top; i++) {
 					placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
-				}
-				cout << "This is the final solution number " << solver->numberOfSolutions << ": \n";
+				}*/
+				cout << "Found solution number " << solver->numberOfSolutions << ": \n";
 				//problem->printContainer();
 				x = stack.top().x + 1;
 				y = stack.top().y;
@@ -534,47 +534,49 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 				boxIndex++;
 				maxDepth = 0;
 			}
+
+			if (!firstSolutionRememberd && solver->numberOfSolutions == 1) {
+				firstStack = rememberSolution(&stack);
+				firstSolutionRememberd = true;
+			}
+
 		}
 
-		if (!firstSolutionRememberd && solver->numberOfSolutions == 1) {
-			firstStack = rememberSolution(&stack);
-			firstSolutionRememberd = true;
-		}
-
-		if (!boxPlaced && boxRotated) {
 		
-			//"unrotate" the box
-			rotateBox(currentBox);
-			boxRotated = false;
+		if (!boxPlaced) {
+			if (boxRotated) {
+		
+				//"unrotate" the box
+				rotateBox(currentBox);
+				boxRotated = false;
 			
-			x = stack.top().x + 1;
-			y = stack.top().y;
-			stack.pop();
-			boxIndex++;
-			if (maxDepth < boxIndex) {
-				maxDepth =  boxIndex;
-			}
-
-		} else if (!boxPlaced && !boxRotated && currentBox->length != currentBox->width) {
-			rotateBox(currentBox);
-			boxRotated = true;
-		} else if (!boxPlaced  && currentBox->length == currentBox->width) {
-			if (boxIndex == problem->number_boxes - 1) {
-				x = 0;
-				y = 0;
-			}
-			else
-			{
 				x = stack.top().x + 1;
 				y = stack.top().y;
 				stack.pop();
 				boxIndex++;
-			}
-			if (maxDepth <  boxIndex) {
-				maxDepth = boxIndex;
-			}
+				if (maxDepth < boxIndex) {
+					maxDepth =  boxIndex;
+				}
+
+			} else if (!boxRotated && currentBox->length != currentBox->width) {
+				rotateBox(currentBox);
+				boxRotated = true;
+			} else if (currentBox->length == currentBox->width) {
+				if (boxIndex == problem->number_boxes - 1) {
+					x = 0;
+					y = 0;
+				}else{
+					x = stack.top().x + 1;
+					y = stack.top().y;
+					stack.pop();
+					boxIndex++;
+				}
+				if (maxDepth <  boxIndex) {
+					maxDepth = boxIndex;
+				}
 			
-		} 
+			}
+		}
 	}
 
 	if (!solveAll) {
@@ -588,12 +590,13 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 
 }
 
+
 int main() {
-	cout << "d";
+
 	//testing single case
 	if (true) {
 		PackerSolver* pSolver = new PackerSolver();
-		
+
 		pSolver->pProblem = loadPackerProblem("3input.txt");
 
 		QuickSort<box>(pSolver->pProblem->boxes, 0, pSolver->pProblem->number_boxes);
@@ -602,7 +605,7 @@ int main() {
 		duration<double> duration;
 		start = high_resolution_clock::now();
 
-		solveProblem<unsigned short>(pSolver->pProblem, pSolver, true);
+		solveProblem<unsigned short>(pSolver->pProblem, pSolver, !true);
 
 		finish = high_resolution_clock::now();
 		duration = finish - start;
