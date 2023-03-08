@@ -15,24 +15,13 @@ using namespace std::chrono;
 /// String input validation. Checks that each char is an integer.
 /// </summary>
 /// <param name="s">Takes a pointer to a string.</param>
-void check_int(string* str) {
 
-	if (*str == "") {
-		cout << "Illegal empty string detected in stream. Only integers allowed.";
-		exit(3);
-	}
-	for (auto ch : *str) {
-		if (isdigit(ch) == 0) {
-			cout << "Illegal charchter \"" << ch << "\" detected in stream. Only integers allowed.";
-			exit(3);
-		}
-	}
-}
 
 //Abstract data types
 /// <summary>
 /// A box to be placed in the container. Has three dimentions: width, length, and name.
 /// </summary>
+
 typedef struct box {
 	unsigned char width;
 	unsigned char length;
@@ -46,10 +35,10 @@ typedef struct box {
 
 };
 
-
-typedef struct Coordinates {
-	int x;
-	int y;
+template <typename T>
+struct Coordinates {
+	T x;
+	T y;
 	box* boxPlaced;
 };
 
@@ -58,7 +47,7 @@ typedef struct Coordinates {
 /// Two functions to dynamically allocate boxes and to print all of the configurations.
 /// </summary>
 typedef struct PackerProblem {
-	unsigned short number_boxes = 0;
+	unsigned int number_boxes = 0;
 	unsigned short width = 0;
 	unsigned short length = 0;
 	unsigned char** container;
@@ -129,11 +118,37 @@ int boxArea(box* box) {
 	return (box->width * box->length);
 }
 
+void checkInput(string* str) {
+
+	if (*str == "") {
+		cout << "Illegal empty string detected in stream. Only integers allowed.";
+		exit(3);
+	}
+	for (auto ch : *str) {
+		if (isdigit(ch) == 0) {
+			cout << "Illegal charchter \"" << ch << "\" detected in stream. Only integers allowed.";
+			exit(3);
+		}
+	}
+
+
+}
+
+
+void checkBoxBound(PackerProblem* problem, int counter) {
+
+	if (problem->boxes[counter].width > problem->width || problem->boxes[counter].width > problem->length) {
+		cout << "The box on line " << counter + 4 << " would not fit into the container.\n Terminating...\n";
+		exit(4);
+	}
+
+}
+
 PackerProblem* loadPackerProblem(string filename) {
 	PackerProblem* problem = new PackerProblem();
 	ifstream file(filename);
 	string newLine;
-	unsigned short counter = 0;
+	unsigned int counter = 0;
 	unsigned int areaContainer = 0;
 	unsigned int sumAreaBoxes = 0;
 
@@ -152,11 +167,11 @@ PackerProblem* loadPackerProblem(string filename) {
 	//Reading and initiating main object with number of boxes and size of the container
 	
 	getline(file, newLine, ' ');
-	check_int(&newLine);
+	checkInput(&newLine);
 	problem->width = stoi(newLine);
 		
 	getline(file, newLine, '\n');
-	check_int(&newLine);
+	checkInput(&newLine);
 	problem->length = stoi(newLine);
 	
 	//Initialyzing the container with empty space
@@ -172,30 +187,24 @@ PackerProblem* loadPackerProblem(string filename) {
 	
 
 	getline(file, newLine);
-	check_int(&newLine);
+	checkInput(&newLine);
 	problem->number_boxes = stoi(newLine);
 	problem->allocate_boxes(problem->number_boxes);
 
 	areaContainer = problem->width * problem->length;
 	
-	
-	
 	//Reading and initiating box sizes and their names
 	while (file.good()) {
 		getline(file, newLine, ' ');
-		check_int(&newLine);
+		checkInput(&newLine);
 		problem->boxes[counter].width = stoi(newLine);
-		if (problem->boxes[counter].width > problem->width || problem->boxes[counter].width > problem->length) {
-			cout << "The box on line " << counter + 4 << " would not fit into the container.\n Terminating...\n";
-			exit(4);
-		}
+		checkBoxBound(problem, counter);
+
 		getline(file, newLine, ' ');
-		check_int(&newLine);
+		checkInput(&newLine);
 		problem->boxes[counter].length = stoi(newLine);
-		if (problem->boxes[counter].length > problem->width || problem->boxes[counter].length > problem->length) {
-			cout << "The box on line " << counter + 4 << " would not fit into the container.\n Terminating...\n";
-			exit(4);
-		}
+		checkBoxBound(problem, counter);
+
 		//No input checks for the name. We expect any char.
 		getline(file, newLine, '\n');
 		problem->boxes[counter].name = newLine[0];
@@ -206,7 +215,7 @@ PackerProblem* loadPackerProblem(string filename) {
 
 	if (sumAreaBoxes > areaContainer) {
 		cout << "The problem is unsolvable!" << endl;
-		cout << "The area of boxes exceed the area of the container->" << endl;
+		cout << "The area of boxes exceed the area of the container!" << endl;
 		cout << "Container area: " << areaContainer << " " << " Sum of the boxes' area: " << sumAreaBoxes << endl;
 		exit(3);
 	}
@@ -218,7 +227,7 @@ PackerProblem* loadPackerProblem(string filename) {
 	}
 
 	//TODO After solving, compare to unused space and calulate efficiency
-	//cout << "The optimal solution would use " << sumAreaBoxes << " square sm of space, leaving empty " << areaContainer - sumAreaBoxes << " sq.sm. of space." << endl << endl;
+	cout << "The optimal solution would use " << sumAreaBoxes << " square m of space, leaving empty " << areaContainer - sumAreaBoxes << " sq.m. of space." << endl << endl;
 	
 
 	return problem;
@@ -251,7 +260,8 @@ void cleanContainer(PackerProblem* problem) {
 	}
 }
 
-bool boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToCheck, int* px, int* py) {
+template <typename T>
+bool boxCollided(PackerProblem* problem, Stack<Coordinates<T>>* pStack, box* boxToCheck, T* px, T* py) {
 	int width = boxToCheck->width;
 	int length = boxToCheck->length;
 	int x = *px;
@@ -275,155 +285,156 @@ bool boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToC
 }
 
 //TODO Delete (Depreciated or under development)
-bool __boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToCheck, int* px, int* py) {
-	int width = boxToCheck->width;
-	int length = boxToCheck->length;
-	int x = *px;
-	int y = *py;
-	//inside the container
-	if (x + width <= problem->width && y + length <= problem->length) {
-		//inside the container while rotated and sides are of different length
-		if (x + length < problem->width && y + width < problem->length && width != length) {
-			for (size_t i = 0; i < pStack->_top; i++) {
-				if (x > pStack->_data[i].x - width
-					&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
-					&& y > pStack->_data[i].y - length
-					&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length) {
-					//still collides while rotated
-					if (x > pStack->_data[i].x - length
-						&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
-						&& y > pStack->_data[i].y - width
-						&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length) {
-						*px += pStack->_data[i].boxPlaced->width - 1;
-						return true;
+//bool __boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToCheck, int* px, int* py) {
+//	int width = boxToCheck->width;
+//	int length = boxToCheck->length;
+//	int x = *px;
+//	int y = *py;
+//	//inside the container
+//	if (x + width <= problem->width && y + length <= problem->length) {
+//		//inside the container while rotated and sides are of different length
+//		if (x + length < problem->width && y + width < problem->length && width != length) {
+//			for (size_t i = 0; i < pStack->_top; i++) {
+//				if (x > pStack->_data[i].x - width
+//					&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
+//					&& y > pStack->_data[i].y - length
+//					&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length) {
+//					//still collides while rotated
+//					if (x > pStack->_data[i].x - length
+//						&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
+//						&& y > pStack->_data[i].y - width
+//						&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length) {
+//						*px += pStack->_data[i].boxPlaced->width - 1;
+//						return true;
+//
+//					}
+//					//need to recheck that the rotated box does not collide with any of the boxes
+//					else {
+//						for (size_t j = 0; j < pStack->_top; j++) {
+//							if (x > pStack->_data[i].x - length
+//								&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
+//								&& y > pStack->_data[i].y - width
+//								&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
+//							{
+//								*px += pStack->_data[i].boxPlaced->width - 1;
+//								return true;
+//							}
+//						}
+//						rotateBox(boxToCheck);
+//
+//						return false;
+//					}
+//				}
+//			}
+//			return false;
+//		}
+//		//outside of the container while rotated
+//		else {
+//			//do regular collision detection
+//			for (size_t i = 0; i < pStack->_top; i++) {
+//				if (x > pStack->_data[i].x - width
+//					&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
+//					&& y > pStack->_data[i].y - length
+//					&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
+//				{
+//					*px += pStack->_data[i].boxPlaced->width - 1;
+//					return true;
+//				}
+//			}
+//			//did not collide
+//			return false;
+//		}
+//	}
+//	//outside of the container
+//	else {
+//		//inside the container while rotated
+//		if (x + length <= problem->width && y + width <= problem->length && width != length) {
+//			//colledes with all the boxes while rotated
+//			for (size_t i = 0; i < pStack->_top; i++) {
+//				if (x > pStack->_data[i].x - length
+//					&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
+//					&& y > pStack->_data[i].y - width
+//					&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
+//				{
+//					*px += pStack->_data[i].boxPlaced->width - 1;
+//					return true;
+//				}
+//			}
+//			//did not collide with all of the boxes while rotated
+//			rotateBox(boxToCheck);
+//
+//			return false;
+//		}
+//		//outside of the container even if rotated
+//		else {
+//			return true;
+//		}
+//	}
+//
+//	return true;
+//}
+//bool _boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToCheck, int* px, int* py) {
+//	int width = boxToCheck->width;
+//	int length = boxToCheck->length;
+//	int x = *px;
+//	int y = *py;
+//	for (size_t i = 0; i < pStack->_top; i++) {
+//		if (x > pStack->_data[i].x - width
+//			&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
+//			&& y > pStack->_data[i].y - length
+//			&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
+//		{	
+//			*px += pStack->_data[i].boxPlaced->width - 1;
+//			return true;
+//		}
+//	}
+//	return false;
+//}
+//void _solveProblem(PackerProblem* problem) {
+//	Stack<Coordinates> stack;
+//
+//	int boxIndex = problem->number_boxes-1;
+//	bool boxPlaced = false;
+//	int x = 0;
+//	int y = 0;
+//	unsigned short length = problem->length;
+//	unsigned short width = problem->width;
+//
+//	while (boxIndex > -1){
+//		box* tmp = &problem->boxes[boxIndex];
+//		for (int i = y; !boxPlaced && i < length; i++) {
+//			for (int j = x; !boxPlaced && j < width; j++) {
+//				if (!__boxCollided(problem, &stack, tmp, &j, &i)) {						
+//					stack.push(Coordinates({ j, i, tmp }));					
+//					boxPlaced = true;
+//					boxIndex--;						
+//				}				
+//			}
+//		}
+//
+//		x = 0;
+//		y = 0;
+//
+//		if (!boxPlaced) {
+//			x = stack.top().x + 1;
+//			y = stack.top().y;		
+//			stack.pop();
+//			boxIndex++;			
+//		}
+//		boxPlaced = false;
+//
+//	}
+//
+//	for (size_t i = 0; i < stack._top; i++) {
+//		
+//		placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
+//
+//	}
+//}
 
-					}
-					//need to recheck that the rotated box does not collide with any of the boxes
-					else {
-						for (size_t j = 0; j < pStack->_top; j++) {
-							if (x > pStack->_data[i].x - length
-								&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
-								&& y > pStack->_data[i].y - width
-								&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
-							{
-								*px += pStack->_data[i].boxPlaced->width - 1;
-								return true;
-							}
-						}
-						rotateBox(boxToCheck);
-
-						return false;
-					}
-				}
-			}
-			return false;
-		}
-		//outside of the container while rotated
-		else {
-			//do regular collision detection
-			for (size_t i = 0; i < pStack->_top; i++) {
-				if (x > pStack->_data[i].x - width
-					&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
-					&& y > pStack->_data[i].y - length
-					&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
-				{
-					*px += pStack->_data[i].boxPlaced->width - 1;
-					return true;
-				}
-			}
-			//did not collide
-			return false;
-		}
-	}
-	//outside of the container
-	else {
-		//inside the container while rotated
-		if (x + length <= problem->width && y + width <= problem->length && width != length) {
-			//colledes with all the boxes while rotated
-			for (size_t i = 0; i < pStack->_top; i++) {
-				if (x > pStack->_data[i].x - length
-					&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
-					&& y > pStack->_data[i].y - width
-					&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
-				{
-					*px += pStack->_data[i].boxPlaced->width - 1;
-					return true;
-				}
-			}
-			//did not collide with all of the boxes while rotated
-			rotateBox(boxToCheck);
-
-			return false;
-		}
-		//outside of the container even if rotated
-		else {
-			return true;
-		}
-	}
-
-	return true;
-}
-bool _boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToCheck, int* px, int* py) {
-	int width = boxToCheck->width;
-	int length = boxToCheck->length;
-	int x = *px;
-	int y = *py;
-	for (size_t i = 0; i < pStack->_top; i++) {
-		if (x > pStack->_data[i].x - width
-			&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
-			&& y > pStack->_data[i].y - length
-			&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
-		{	
-			*px += pStack->_data[i].boxPlaced->width - 1;
-			return true;
-		}
-	}
-	return false;
-}
-void _solveProblem(PackerProblem* problem) {
-	Stack<Coordinates> stack;
-
-	int boxIndex = problem->number_boxes-1;
-	bool boxPlaced = false;
-	int x = 0;
-	int y = 0;
-	unsigned short length = problem->length;
-	unsigned short width = problem->width;
-
-	while (boxIndex > -1){
-		box* tmp = &problem->boxes[boxIndex];
-		for (int i = y; !boxPlaced && i < length; i++) {
-			for (int j = x; !boxPlaced && j < width; j++) {
-				if (!__boxCollided(problem, &stack, tmp, &j, &i)) {						
-					stack.push(Coordinates({ j, i, tmp }));					
-					boxPlaced = true;
-					boxIndex--;						
-				}				
-			}
-		}
-
-		x = 0;
-		y = 0;
-
-		if (!boxPlaced) {
-			x = stack.top().x + 1;
-			y = stack.top().y;		
-			stack.pop();
-			boxIndex++;			
-		}
-		boxPlaced = false;
-
-	}
-
-	for (size_t i = 0; i < stack._top; i++) {
-		
-		placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
-
-	}
-}
-
+template <typename T>
 void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = false) {
-	Stack<Coordinates> stack;
+	Stack<Coordinates<T>> stack;
 
 	int boxIndex = problem->number_boxes - 1;
 	bool boxPlaced = false;
@@ -448,10 +459,10 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 		
 		currentBox = &problem->boxes[boxIndex];
 
-		for (int i = y; !boxPlaced && i < length - currentBox->length + 1; i++) {
-			for (int j = x; !boxPlaced && j < width - currentBox->width + 1; j++) {
-				if (!boxCollided(problem, &stack, currentBox, &j, &i)) {
-					stack.push(Coordinates({ j, i, currentBox }));
+		for (T i = y; !boxPlaced && i < length - currentBox->length + 1; i++) {
+			for (T j = x; !boxPlaced && j < width - currentBox->width + 1; j++) {
+				if (!boxCollided<T>(problem, &stack, currentBox, &j, &i)) {
+					stack.push(Coordinates<T>({ j, i, currentBox }));
 					boxPlaced = true;
 					boxIndex--;
 					if (boxRotated) {
@@ -524,7 +535,7 @@ int main() {
 		duration<double> duration;
 		start = high_resolution_clock::now();
 
-		solveProblem(pSolver->pProblem, pSolver, !true);
+		solveProblem<unsigned short>(pSolver->pProblem, pSolver, !true);
 
 		finish = high_resolution_clock::now();
 		duration = finish - start;
