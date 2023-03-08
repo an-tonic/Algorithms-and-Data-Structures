@@ -1,0 +1,4 @@
+Example file test
+10 10
+1
+9 8 *

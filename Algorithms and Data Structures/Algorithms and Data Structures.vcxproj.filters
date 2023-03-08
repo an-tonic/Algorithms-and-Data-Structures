@@ -43,6 +43,9 @@
     <Text Include="3input.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="testinput.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Lab\Lab\Stack.h">

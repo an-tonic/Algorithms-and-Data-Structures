@@ -134,7 +134,6 @@ void checkInput(string* str) {
 
 }
 
-
 void checkBoxBound(PackerProblem* problem, int counter) {
 
 	if (problem->boxes[counter].width > problem->width || problem->boxes[counter].width > problem->length) {
@@ -142,6 +141,33 @@ void checkBoxBound(PackerProblem* problem, int counter) {
 		exit(4);
 	}
 
+}
+
+void placeBox(PackerProblem* problem, box* box, int x, int y) {
+
+	int xBounds = x + box->width;
+	int down = box->length;
+	char name = box->name;
+
+	//Placing the box in the container
+	for (int i = x; i < xBounds; i++) {
+		memset(&problem->container[i][y], name, down);
+	}
+
+}
+
+void rotateBox(box* box) {
+	int tmp = box->length;
+	box->length = box->width;
+	box->width = tmp;
+}
+
+void cleanContainer(PackerProblem* problem) {
+	for (int i = 0; i < problem->width; i++) {
+		for (int j = 0; j < problem->length; j++) {
+			problem->container[i][j] = '0';
+		}
+	}
 }
 
 PackerProblem* loadPackerProblem(string filename) {
@@ -231,33 +257,6 @@ PackerProblem* loadPackerProblem(string filename) {
 	
 
 	return problem;
-}
-
-void placeBox(PackerProblem* problem, box* box, int x, int y) {
-
-	int xBounds = x + box->width;
-	int down = box->length;
-	char name = box->name;
-	
-	//Placing the box in the container
-	for (int i = x; i < xBounds; i++) {
-		memset(&problem->container[i][y], name, down);
-	}
-
-}
-
-void rotateBox(box* box) {
-	int tmp = box->length;
-	box->length = box->width;
-	box->width = tmp;
-}
-
-void cleanContainer(PackerProblem* problem) {
-	for (int i = 0; i < problem->width; i++) {
-		for (int j = 0; j < problem->length; j++) {
-			problem->container[i][j] = '0';
-		}
-	}
 }
 
 template <typename T>
@@ -475,9 +474,13 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 			x = 0;
 		}
 		y = 0;
-
+		if (!boxPlaced && stack.isEmpty() && !solveAll) {
+			cout << "There is no solution!\n";
+			exit(5);
+		}
+		
 		//Bug: infinite loop. Possible solution bool rotation in the stack? Biniary sm?
-		if (solveAll && !boxPlaced && boxIndex == problem->number_boxes - 1 && boxRotated) {
+		if (solveAll && !boxPlaced && boxIndex == problem->number_boxes - 1 && (boxRotated || currentBox->length == currentBox->width)) {
 			cout << "Found " << solver->numberOfSolutions << " of all of the solutions!\n";
 			break;
 		} else if (solveAll && boxIndex == -1) {
@@ -493,7 +496,7 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 			stack.pop();
 			boxIndex++;
 		} 
-		
+
 		if (!boxPlaced && boxRotated) {
 		
 			//"unrotate" the box
@@ -527,7 +530,7 @@ int main() {
 	if (true) {
 		PackerSolver* pSolver = new PackerSolver();
 		
-		pSolver->pProblem = loadPackerProblem("input.txt");
+		pSolver->pProblem = loadPackerProblem("testinput.txt");
 
 		QuickSort<box>(pSolver->pProblem->boxes, 0, pSolver->pProblem->number_boxes);
 
@@ -535,7 +538,7 @@ int main() {
 		duration<double> duration;
 		start = high_resolution_clock::now();
 
-		solveProblem<unsigned short>(pSolver->pProblem, pSolver, !true);
+		solveProblem<unsigned short>(pSolver->pProblem, pSolver, true);
 
 		finish = high_resolution_clock::now();
 		duration = finish - start;

@@ -142,6 +142,7 @@
     <Text Include="3input.txt" />
     <Text Include="2input.txt" />
     <Text Include="1input.txt" />
+    <Text Include="testinput.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Lab\Lab\Stack.h" />
