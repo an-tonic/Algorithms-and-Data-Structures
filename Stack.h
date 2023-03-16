@@ -8,12 +8,7 @@ using std::cout;
 
 template <typename T>
 struct Stack {
-    T* _data;
-
-    Stack(unsigned int stack_size) {
-        _data = new T [stack_size]();
-    }
-
+    T _data[MAX_SIZE];
     unsigned int _top = 0;
 
     bool isEmpty() {
@@ -46,7 +41,7 @@ struct Stack {
         if (!isEmpty()) {
             cout << "Printing stack from the top\n";
             for (int i = _top - 1; i >= 0; i--) {
-                cout << _data[i].x << ", " << _data[i].y << " " << *_data[i].boxPlaced->name << "\n";
+                cout << _data[i].x << ", " << _data[i].y << " " << _data[i].boxPlaced->name << "\n";
             }
             cout << "-----------\n\n";
         }
