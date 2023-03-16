@@ -467,137 +467,218 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 	T width = problem->width;
 	box* currentBox;
 
-	while (boxIndex > -1) {
-		//debug. delete later
-		/*cleanContainer(problem);
+	//Find just one solution
 
-		for (size_t i = 0; i < stack._top; i++) {
-			placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
-		}
-		problem->printContainer();*/
+	if (solveAll) {
+		while (boxIndex > -1) {
+			//debug. delete later
+			/*cleanContainer(problem);
 
-		solver->steps++;
-		boxPlaced = false;
-		
-		currentBox = &problem->boxes[boxIndex];
+			for (size_t i = 0; i < stack._top; i++) {
+				placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
+			}
+			problem->printContainer();*/
 
-		for (T i = y; !boxPlaced && i < length - currentBox->length + 1; i++) {
-			for (T j = x; !boxPlaced && j < width - currentBox->width + 1; j++) {
-				if (!boxCollided<T>(problem, &stack, currentBox, &j, &i)) {
-					stack.push(Coordinates<T>({ j, i, currentBox }));
-					boxPlaced = true;
-					boxIndex--;
-					if (boxRotated) {
-						boxRotated = false;
+			solver->steps++;
+			boxPlaced = false;
+
+			currentBox = &problem->boxes[boxIndex];
+
+			for (T i = y; !boxPlaced && i < length - currentBox->length + 1; i++) {
+				for (T j = x; !boxPlaced && j < width - currentBox->width + 1; j++) {
+					if (!boxCollided<T>(problem, &stack, currentBox, &j, &i)) {
+						stack.push(Coordinates<T>({ j, i, currentBox }));
+						boxPlaced = true;
+						boxIndex--;
+						if (boxRotated) {
+							boxRotated = false;
+						}
 					}
 				}
+				//After the box has been poped, the previous starts where it was, 
+				//but it needs to start from '0' on the next line of the container
+				x = 0;
 			}
-			//After the box has been poped, the previous starts where it was, 
-			//but it needs to start from '0' on the next line of the container
-			x = 0;
-		}
-		y = 0;
+			y = 0;
 
-
-		if (!boxPlaced && stack.isEmpty() && !solveAll) {
-			cout << "There is no solution!\n";
-			exit(5);
-		}
-		
-		//Bug: infinite loop. Possible solution bool rotation in the stack? Biniary sm?
-		/*if (solveAll && !boxPlaced && boxIndex == problem->number_boxes - 1 && boxRotated) {
-			cout << "Found " << solver->numberOfSolutions << " of all of the solutions!\n";
-			break;
-		}
-		else*/ 
-		if (solveAll && boxIndex == -1) {
-			if (solver->numberOfSolutions > 1 && maxDepth >= problem->number_boxes - 1 && sameSolutions(firstStack, &stack)) {
+			//Bug: infinite loop. Possible solution bool rotation in the stack? Biniary sm?
+			/*if (solveAll && !boxPlaced && boxIndex == problem->number_boxes - 1 && boxRotated) {
 				cout << "Found " << solver->numberOfSolutions << " of all of the solutions!\n";
 				break;
 			}
-			if (solver->numberOfSolutions > 1 && maxDepth <= problem->number_boxes - 1 && sameSolutions(firstStack, &stack)) {
-				stack._top = maxDepth;
-				boxIndex = maxDepth;
-				boxPlaced = false;
-			}
-			else {
-				solver->numberOfSolutions++;
-				//cout << "Found solution number " << solver->numberOfSolutions << ": \n";
-
-				/*cleanContainer(problem);
-
-				for (size_t i = 0; i < stack._top; i++) {
-					placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
-				}*/
-				
-				//problem->printContainer();
-				x = stack.top().x + 1;
-				y = stack.top().y;
-				stack.pop();
-				boxIndex++;
-				maxDepth = 0;
-			}
-
-			if (!firstSolutionRememberd && solver->numberOfSolutions == 1) {
-				firstStack = rememberSolution(&stack);
-				firstSolutionRememberd = true;
-			}
-
-		}
-
-		
-		if (!boxPlaced) {
-			if (boxRotated) {
-		
-				//"unrotate" the box
-				rotateBox(currentBox);
-				boxRotated = false;
-			
-				x = stack.top().x + 1;
-				y = stack.top().y;
-				stack.pop();
-				boxIndex++;
-				if (maxDepth < boxIndex) {
-					maxDepth =  boxIndex;
+			else*/
+			if (boxIndex == -1) {
+				if (solver->numberOfSolutions > 1 && maxDepth >= problem->number_boxes - 1 && sameSolutions(firstStack, &stack)) {
+					cout << "Found " << solver->numberOfSolutions << " of all of the solutions!\n";
+					break;
 				}
+				if (solver->numberOfSolutions > 1 && maxDepth <= problem->number_boxes - 1 && sameSolutions(firstStack, &stack)) {
+					stack._top = maxDepth;
+					boxIndex = maxDepth;
+					boxPlaced = false;
+				}
+				else {
+					solver->numberOfSolutions++;
+					//cout << "Found solution number " << solver->numberOfSolutions << ": \n";
 
-			} else if (!boxRotated && currentBox->length != currentBox->width) {
-				rotateBox(currentBox);
-				boxRotated = true;
-			} else if (currentBox->length == currentBox->width) {
-				if (boxIndex == problem->number_boxes - 1) {
-					x = 0;
-					y = 0;
-				}else{
+					/*cleanContainer(problem);
+
+					for (size_t i = 0; i < stack._top; i++) {
+						placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
+					}*/
+
+					//problem->printContainer();
 					x = stack.top().x + 1;
 					y = stack.top().y;
 					stack.pop();
 					boxIndex++;
+					maxDepth = 0;
 				}
-				if (maxDepth <  boxIndex) {
-					maxDepth = boxIndex;
+
+				if (!firstSolutionRememberd && solver->numberOfSolutions == 1) {
+					firstStack = rememberSolution(&stack);
+					firstSolutionRememberd = true;
 				}
-			
+
+			}
+
+
+			if (!boxPlaced) {
+				if (boxRotated) {
+
+					//"unrotate" the box
+					rotateBox(currentBox);
+					boxRotated = false;
+
+					x = stack.top().x + 1;
+					y = stack.top().y;
+					stack.pop();
+					boxIndex++;
+					if (maxDepth < boxIndex) {
+						maxDepth = boxIndex;
+					}
+
+				}
+				else if (!boxRotated && currentBox->length != currentBox->width) {
+					rotateBox(currentBox);
+					boxRotated = true;
+				}
+				else if (currentBox->length == currentBox->width) {
+					if (boxIndex == problem->number_boxes - 1) {
+						x = 0;
+						y = 0;
+					}
+					else {
+						x = stack.top().x + 1;
+						y = stack.top().y;
+						stack.pop();
+						boxIndex++;
+					}
+					if (maxDepth < boxIndex) {
+						maxDepth = boxIndex;
+					}
+
+				}
 			}
 		}
+
 	}
 
+	//Find all the solutions
 	if (!solveAll) {
+		while (boxIndex > -1) {
+			//debug. delete later
+			/*cleanContainer(problem);
+
+			for (size_t i = 0; i < stack._top; i++) {
+				placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
+			}
+			problem->printContainer();*/
+
+			solver->steps++;
+			boxPlaced = false;
+
+			currentBox = &problem->boxes[boxIndex];
+
+			for (T i = y; !boxPlaced && i < length - currentBox->length + 1; i++) {
+				for (T j = x; !boxPlaced && j < width - currentBox->width + 1; j++) {
+					if (!boxCollided<T>(problem, &stack, currentBox, &j, &i)) {
+						stack.push(Coordinates<T>({ j, i, currentBox }));
+						boxPlaced = true;
+						boxIndex--;
+						if (boxRotated) {
+							boxRotated = false;
+						}
+					}
+				}
+				//After the box has been poped, the previous starts where it was, 
+				//but it needs to start from '0' on the next line of the container
+				x = 0;
+			}
+			y = 0;
+
+
+			if (!boxPlaced && stack.isEmpty()) {
+				cout << "There is no solution!\n";
+				exit(5);
+			}
+
+
+			if (!boxPlaced) {
+				if (boxRotated) {
+
+					//"unrotate" the box
+					rotateBox(currentBox);
+					boxRotated = false;
+
+					x = stack.top().x + 1;
+					y = stack.top().y;
+					stack.pop();
+					boxIndex++;
+					if (maxDepth < boxIndex) {
+						maxDepth = boxIndex;
+					}
+
+				}
+				else if (!boxRotated && currentBox->length != currentBox->width) {
+					rotateBox(currentBox);
+					boxRotated = true;
+				}
+				else if (currentBox->length == currentBox->width) {
+					if (boxIndex == problem->number_boxes - 1) {
+						x = 0;
+						y = 0;
+					}
+					else {
+						x = stack.top().x + 1;
+						y = stack.top().y;
+						stack.pop();
+						boxIndex++;
+					}
+					if (maxDepth < boxIndex) {
+						maxDepth = boxIndex;
+					}
+
+				}
+			}
+		}
+
 		for (size_t i = 0; i < stack._top; i++) {
 			placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
 		}
-		/*problem->printContainer();
-		cout << solver->steps << " steps needed.\n";*/
+		problem->printContainer();
+		cout << solver->steps << " steps needed.\n";
+		
 	}
-	
 
+	
 }
 
 
 int main() {
 
 	//testing single case
-	if (!true) {
+	if (true) {
 		PackerSolver* pSolver = new PackerSolver();
 
 		pSolver->pProblem = loadPackerProblem("1input.txt");
@@ -608,7 +689,7 @@ int main() {
 		duration<double> duration;
 		start = high_resolution_clock::now();
 
-		solveProblem<unsigned short>(pSolver->pProblem, pSolver, !true);
+		solveProblem<unsigned short>(pSolver->pProblem, pSolver, true);
 
 		finish = high_resolution_clock::now();
 		duration = finish - start;
