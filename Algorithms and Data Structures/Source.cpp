@@ -6,6 +6,7 @@
 #include "Stack.h"
 #include <ctime>
 #include <chrono>
+#include <vector>
 
 using namespace std;
 using namespace std::chrono;
@@ -304,6 +305,28 @@ bool boxCollided(PackerProblem* problem, Stack<Coordinates<T>>* pStack, box* box
 	return false;
 }
 
+template <typename T>
+string* stringifyStack(Stack<Coordinates<T>>* pStack) {
+	string* s = new string();
+
+	for (int i = 0; i < pStack->_top; i++) {
+		s->append(to_string(pStack->_data[i].x) + to_string(pStack->_data[i].y)+ (char)pStack->_data[i].boxPlaced->name);
+	}
+	return s;
+}
+
+bool solutionExists(vector<string>* solutions, string* newSolution) {
+
+	vector<string>::iterator it;
+
+	for (it = solutions->begin(); it != solutions->end(); it++) {
+		if (*newSolution == *it) {
+			return true;
+		};
+	}
+	return false;
+}
+
 //TODO Delete (Depreciated or under development)
 //bool __boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToCheck, int* px, int* py) {
 //	int width = boxToCheck->width;
@@ -455,8 +478,8 @@ bool boxCollided(PackerProblem* problem, Stack<Coordinates<T>>* pStack, box* box
 template <typename T>
 void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = false) {
 	Stack<Coordinates<T>> stack(problem->number_boxes);
-	Stack<Coordinates<T>>* firstStack = nullptr;
-	bool firstSolutionRememberd = false;
+	//Stack<Coordinates<T>>* firstStack = nullptr;
+	//bool firstSolutionRememberd = false;
 	T maxDepth = 0;
 	int boxIndex = problem->number_boxes - 1;
 	bool boxPlaced = false;
@@ -557,6 +580,10 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 	}
 	//Find all the solutions
 	else if (solveAll) {
+		
+		//Initailize vecort that will contain all solutions 
+		vector<string> allSolutions;
+
 		while (boxIndex > -1) {
 			//debug. delete later
 			/*cleanContainer(problem);
@@ -595,36 +622,31 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 			}
 			else*/
 			if (boxIndex == -1) {
-				if (solver->numberOfSolutions > 1 && maxDepth >= problem->number_boxes - 1 && sameSolutions(firstStack, &stack)) {
-					cout << "Found " << solver->numberOfSolutions << " of all of the solutions!\n";
-					break;
-				}
-				if (solver->numberOfSolutions > 1 && maxDepth <= problem->number_boxes - 1 && sameSolutions(firstStack, &stack)) {
-					stack._top = maxDepth;
-					boxIndex = maxDepth;
-					boxPlaced = false;
+				string* textStack = stringifyStack(&stack);
+
+				if (solutionExists(&allSolutions, textStack)) {
+					stack._top = problem->number_boxes - maxDepth - 1;
+					if (stack.isEmpty()) {
+						cout << allSolutions.size() << endl;
+						cout << "Found " << solver->numberOfSolutions << " solutions!\n";
+						break;
+					}
+					boxIndex = maxDepth + 1;
+					boxPlaced = true;
+					x = stack.top().x + 1;
+					y = stack.top().y;
+					stack.pop();
+					maxDepth++;
 				}
 				else {
 					solver->numberOfSolutions++;
 					//cout << "Found solution number " << solver->numberOfSolutions << ": \n";
-
-					/*cleanContainer(problem);
-
-					for (size_t i = 0; i < stack._top; i++) {
-						placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
-					}*/
-
-					//problem->printContainer();
+					allSolutions.push_back(*textStack);
 					x = stack.top().x + 1;
 					y = stack.top().y;
 					stack.pop();
 					boxIndex++;
 					maxDepth = 0;
-				}
-
-				if (!firstSolutionRememberd && solver->numberOfSolutions == 1) {
-					firstStack = rememberSolution(&stack);
-					firstSolutionRememberd = true;
 				}
 
 			}
@@ -672,15 +694,14 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 
 
 int main() {
-	
-	
 
+	
 
 	//testing single case
 	if (true) {
 		PackerSolver* pSolver = new PackerSolver();
 
-		pSolver->pProblem = loadPackerProblem("2input.txt");
+		pSolver->pProblem = loadPackerProblem("3input.txt");
 
 		QuickSort<box>(pSolver->pProblem->boxes, 0, pSolver->pProblem->number_boxes);
 
@@ -688,7 +709,7 @@ int main() {
 		duration<double> duration;
 		start = high_resolution_clock::now();
 
-		solveProblem<unsigned short>(pSolver->pProblem, pSolver, !true);
+		solveProblem<unsigned short>(pSolver->pProblem, pSolver, true);
 
 		finish = high_resolution_clock::now();
 		duration = finish - start;
