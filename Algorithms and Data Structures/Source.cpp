@@ -10,13 +10,6 @@
 
 using namespace std;
 using namespace std::chrono;
-//Util functions
-
-/// <summary>
-/// String input validation. Checks that each char is an integer.
-/// </summary>
-/// <param name="s">Takes a pointer to a string.</param>
-
 
 //Abstract data types
 /// <summary>
@@ -107,7 +100,6 @@ typedef struct PackerProblem {
 typedef struct PackerSolver {
 
 	unsigned long long steps = 0;
-
 	unsigned long long numberOfSolutions = 0;
 
 	PackerProblem* pProblem;
@@ -115,6 +107,7 @@ typedef struct PackerSolver {
 
 };
 
+//FUNCTOIONS FOR LOADING
 /// <summary>
 /// Calculates the area of the box. 
 /// </summary>
@@ -157,6 +150,102 @@ void checkBoxBound(PackerProblem* problem, int counter) {
 
 }
 
+/// <summary>
+/// Reads the file, checks each line, writes errors if any, initializes the container array with "0" and allocates boxes.
+/// </summary>
+/// <param name="filename">The name of the file to be read.</param>
+/// <returns>The structure that holds the boxes and the container.</returns>
+PackerProblem* loadPackerProblem(string filename) {
+	PackerProblem* problem = new PackerProblem();
+	ifstream file(filename);
+	string newLine;
+	unsigned int counter = 0;
+	unsigned int areaContainer = 0;
+	unsigned int sumAreaBoxes = 0;
+
+	//Reading and proof-checking the first line of the file
+	getline(file, newLine);
+
+	cout << "Loading file: " << newLine << endl;
+
+	//The first line of the file should be of a specific length and start with a char
+	if (newLine.length() < 5 || isdigit(newLine[0]) > 0) {
+		cout << "The file is currupted." << endl;
+		cout << "The first line of the file is incorrect." << endl;
+		exit(3);
+	}
+
+	//Reading and initiating main object with number of boxes and size of the container
+
+	getline(file, newLine, ' ');
+	checkInput(&newLine);
+	problem->width = stoi(newLine);
+
+	getline(file, newLine, '\n');
+	checkInput(&newLine);
+	problem->length = stoi(newLine);
+
+	//Initialyzing the container with empty space
+	problem->container = new unsigned char* [problem->width];
+	for (int i = 0; i < problem->width; i++) {
+		problem->container[i] = new unsigned char[problem->length];
+	}
+	for (int i = 0; i < problem->width; i++) {
+		for (int j = 0; j < problem->length; j++) {
+			problem->container[i][j] = '0';
+		}
+	}
+
+
+	getline(file, newLine);
+	checkInput(&newLine);
+	problem->number_boxes = stoi(newLine);
+	problem->allocate_boxes(problem->number_boxes);
+
+	areaContainer = problem->width * problem->length;
+
+	//Reading and initiating box sizes and their names
+	while (file.good()) {
+		getline(file, newLine, ' ');
+		checkInput(&newLine);
+		problem->boxes[counter].width = stoi(newLine);
+		checkBoxBound(problem, counter);
+
+		getline(file, newLine, ' ');
+		checkInput(&newLine);
+		problem->boxes[counter].length = stoi(newLine);
+		checkBoxBound(problem, counter);
+
+		//No input checks for the name. We expect any char.
+		getline(file, newLine, '\n');
+		problem->boxes[counter].name = newLine[0];
+
+		sumAreaBoxes = sumAreaBoxes + boxArea(&problem->boxes[counter]);
+		counter++;
+	}
+
+	if (sumAreaBoxes > areaContainer) {
+		cout << "The problem is unsolvable!" << endl;
+		cout << "The area of boxes exceed the area of the container!" << endl;
+		cout << "Container area: " << areaContainer << " " << " Sum of the boxes' area: " << sumAreaBoxes << endl;
+		exit(3);
+	}
+
+	if (counter != problem->number_boxes) {
+		cout << "The file is currupted!" << endl;
+		cout << "Incorrect number of boxes provided/specified." << endl;
+		exit(3);
+	}
+
+	//TODO After solving, compare to unused space and calulate efficiency
+	cout << "The optimal solution would use " << sumAreaBoxes << " square m of space, leaving empty " << areaContainer - sumAreaBoxes << " sq.m. of space." << endl << endl;
+
+
+	return problem;
+}
+
+
+//FUNCTIONS FOR SOLVING
 /// <summary>
 /// Writes the name of the box onto the container array.
 /// </summary>
@@ -204,101 +293,6 @@ void showContainer(PackerProblem* problem, Stack<Coordinates<T>>* pStack) {
 	
 	problem->printContainer();
 }
-
-/// <summary>
-/// Reads the file, checks each line, writes errors if any, initializes the container array with "0" and allocates boxes.
-/// </summary>
-/// <param name="filename">The name of the file to be read.</param>
-/// <returns>The structure that holds the boxes and the container.</returns>
-PackerProblem* loadPackerProblem(string filename) {
-	PackerProblem* problem = new PackerProblem();
-	ifstream file(filename);
-	string newLine;
-	unsigned int counter = 0;
-	unsigned int areaContainer = 0;
-	unsigned int sumAreaBoxes = 0;
-
-	//Reading and proof-checking the first line of the file
-	getline(file, newLine);
-
-	cout << "Loading file: " << newLine << endl;
-
-	//The first line of the file should be of a specific length and start with a char
-	if (newLine.length() < 5 || isdigit(newLine[0]) > 0) {
-		cout << "The file is currupted." << endl;
-		cout << "The first line of the file is incorrect." << endl;
-		exit(3);
-	}
-
-	//Reading and initiating main object with number of boxes and size of the container
-	
-	getline(file, newLine, ' ');
-	checkInput(&newLine);
-	problem->width = stoi(newLine);
-		
-	getline(file, newLine, '\n');
-	checkInput(&newLine);
-	problem->length = stoi(newLine);
-	
-	//Initialyzing the container with empty space
-	problem->container = new unsigned char* [problem->width];
-	for (int i = 0; i < problem->width; i++) {
-		problem->container[i] = new unsigned char[problem->length];
-	}
-	for (int i = 0; i < problem->width; i++) {
-		for (int j = 0; j < problem->length; j++) {
-			problem->container[i][j] = '0';
-		}
-	}
-	
-
-	getline(file, newLine);
-	checkInput(&newLine);
-	problem->number_boxes = stoi(newLine);
-	problem->allocate_boxes(problem->number_boxes);
-
-	areaContainer = problem->width * problem->length;
-	
-	//Reading and initiating box sizes and their names
-	while (file.good()) {
-		getline(file, newLine, ' ');
-		checkInput(&newLine);
-		problem->boxes[counter].width = stoi(newLine);
-		checkBoxBound(problem, counter);
-
-		getline(file, newLine, ' ');
-		checkInput(&newLine);
-		problem->boxes[counter].length = stoi(newLine);
-		checkBoxBound(problem, counter);
-
-		//No input checks for the name. We expect any char.
-		getline(file, newLine, '\n');
-		problem->boxes[counter].name = newLine[0];
-
-		sumAreaBoxes = sumAreaBoxes + boxArea(&problem->boxes[counter]);
-		counter++;
-	}
-
-	if (sumAreaBoxes > areaContainer) {
-		cout << "The problem is unsolvable!" << endl;
-		cout << "The area of boxes exceed the area of the container!" << endl;
-		cout << "Container area: " << areaContainer << " " << " Sum of the boxes' area: " << sumAreaBoxes << endl;
-		exit(3);
-	}
-
-	if (counter != problem->number_boxes) {
-		cout << "The file is currupted!" << endl;
-		cout << "Incorrect number of boxes provided/specified." << endl;
-		exit(3);
-	}
-
-	//TODO After solving, compare to unused space and calulate efficiency
-	cout << "The optimal solution would use " << sumAreaBoxes << " square m of space, leaving empty " << areaContainer - sumAreaBoxes << " sq.m. of space." << endl << endl;
-	
-
-	return problem;
-}
-
 
 /// <summary>
 /// Accepts a poiner to a box and checks if it would collide with any of the already placed boxes. If it collides jumps the coordinates to the edge
@@ -367,6 +361,12 @@ bool solutionExists(vector<string>* solutions, string* newSolution) {
 	return false;
 }
 
+/// <summary>
+/// Moves the top box in the stack to the right and then pops it so that it can be placed.
+/// </summary>
+/// <param name="pStack">Pointer to the stack</param>
+/// <param name="x">X coordinate that the top box was placed.</param>
+/// <param name="y">Y coordinate that the top box was placed.</param>
 template <typename T>
 void tryNextPosition(Stack<Coordinates<T>>* pStack, T* x, T* y) {
 	*x = pStack->top().x + 1;
@@ -559,52 +559,20 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 
 int main() {
 
-	
+	PackerSolver* pSolver = new PackerSolver();
 
-	//testing single case
-	if (true) {
-		PackerSolver* pSolver = new PackerSolver();
+	pSolver->pProblem = loadPackerProblem("2input.txt");
 
-		pSolver->pProblem = loadPackerProblem("input.txt");
+	high_resolution_clock::time_point start, finish;
+	duration<double> duration;
+	start = high_resolution_clock::now();
 
-		high_resolution_clock::time_point start, finish;
-		duration<double> duration;
-		start = high_resolution_clock::now();
+	QuickSort<Box>(pSolver->pProblem->boxes, 0, pSolver->pProblem->number_boxes);
+	solveProblem<unsigned short>(pSolver->pProblem, pSolver, false);
 
-		QuickSort<Box>(pSolver->pProblem->boxes, 0, pSolver->pProblem->number_boxes);
-		solveProblem<unsigned short>(pSolver->pProblem, pSolver, true);
+	finish = high_resolution_clock::now();
+	duration = finish - start;
 
-		finish = high_resolution_clock::now();
-		duration = finish - start;
+	cout << duration.count() << "\n";
 
-		
-
-		cout << duration.count() << "\n";
-	
-	} 
-	//testing avgtime
-	else {
-
-		PackerSolver* pSolver = new PackerSolver();
-
-		pSolver->pProblem = loadPackerProblem("1input.txt");
-
-		QuickSort<Box>(pSolver->pProblem->boxes, 0, pSolver->pProblem->number_boxes);
-
-
-		high_resolution_clock::time_point start, finish;
-		duration<double> duration;
-
-
-		for (int j = 0; j < 15; j++){
-			start = high_resolution_clock::now();
-			for (int i = 0; i < 2000000; i++) {
-				solveProblem<unsigned short>(pSolver->pProblem, pSolver, !true);
-			}
-			finish = high_resolution_clock::now();
-			duration = finish - start;
-			cout << duration.count() << "\n";
-
-		}
-	}
 }
