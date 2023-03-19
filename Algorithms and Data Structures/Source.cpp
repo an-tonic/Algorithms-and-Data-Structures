@@ -23,14 +23,13 @@ using namespace std::chrono;
 /// A box to be placed in the container. Has three dimentions: width, length, and name.
 /// </summary>
 
-typedef struct box {
+typedef struct Box {
 	unsigned char width;
 	unsigned char length;
 	unsigned char name;
 
 	// Operator Overloadings on area of the boxes for the Quicksort Algorithm
-
-	bool operator <=(const box& bx) {
+	bool operator <=(const Box& bx) {
 		return width * length <= bx.width * bx.length;
 	}
 
@@ -40,7 +39,7 @@ template <typename T>
 struct Coordinates {
 	T x;
 	T y;
-	box* boxPlaced;
+	Box* boxPlaced;
 };
 
 /// <summary>
@@ -53,18 +52,18 @@ typedef struct PackerProblem {
 	unsigned short length = 0;
 	unsigned char** container;
 
-	box* boxes;
+	Box* boxes;
 
 	/// <summary>
 	/// Constructor for dynamic boxes.
 	/// </summary>
 	/// <param name="num_boxes">Number of boxes that needs to be allocated</param>
 	void allocate_boxes(int num_boxes) {
-		boxes = new box[num_boxes];
+		boxes = new Box[num_boxes];
 	}
 
 	/// <summary>
-	/// Prints the container2 and some additional information.
+	/// Prints the container and some additional information.
 	/// </summary>
 	void printContainer() {
 		//print container
@@ -112,13 +111,22 @@ typedef struct PackerSolver {
 	unsigned long long numberOfSolutions = 0;
 
 	PackerProblem* pProblem;
+	string* finalSolution;
 
 };
 
-int boxArea(box* box) {
+/// <summary>
+/// Calculates the area of the box. 
+/// </summary>
+/// <param name="box">Pointer to the Box structure.</param>
+/// <returns>The area of the box</returns>
+int boxArea(Box* box) {
 	return (box->width * box->length);
 }
 
+/// <summary>
+/// Accepts pointer to string. Check if the string is empty. Searches for chars in the strings.
+/// </summary>
 void checkInput(string* str) {
 
 	if (*str == "") {
@@ -135,6 +143,11 @@ void checkInput(string* str) {
 
 }
 
+/// <summary>
+/// Checks if any of the boxes could potentially fit into the container.
+/// </summary>
+/// <param name="problem">The structure holding container and boxes.</param>
+/// <param name="counter">The box counter: to dislay which box is the problem.</param>
 void checkBoxBound(PackerProblem* problem, int counter) {
 
 	if (problem->boxes[counter].width > problem->width || problem->boxes[counter].width > problem->length) {
@@ -144,7 +157,13 @@ void checkBoxBound(PackerProblem* problem, int counter) {
 
 }
 
-void placeBox(PackerProblem* problem, box* box, int x, int y) {
+/// <summary>
+/// Writes the name of the box onto the container array.
+/// </summary>
+/// <param name="box">The box to be placed.</param>
+/// <param name="x">x coordinate of the box</param>
+/// <param name="y">y coordinate of the box</param>
+void placeBox(PackerProblem* problem, Box* box, int x, int y) {
 
 	int xBounds = x + box->width;
 	int down = box->length;
@@ -157,41 +176,40 @@ void placeBox(PackerProblem* problem, box* box, int x, int y) {
 
 }
 
-void rotateBox(box* box) {
+/// <summary>
+/// Chaa]nges the length with the width of the box, thus rotates it.
+/// </summary>
+/// <param name="box">Box to be rotated</param>
+void rotateBox(Box* box) {
 	int tmp = box->length;
 	box->length = box->width;
 	box->width = tmp;
 }
 
-void cleanContainer(PackerProblem* problem) {
+/// <summary>
+/// Writes empty char "0" into the container, writes the names of all the boxes from the stack and prints the container
+/// </summary>
+template <typename T>
+void showContainer(PackerProblem* problem, Stack<Coordinates<T>>* pStack) {
+	//Cleaning the container
 	for (int i = 0; i < problem->width; i++) {
 		for (int j = 0; j < problem->length; j++) {
 			problem->container[i][j] = '0';
 		}
 	}
-}
-
-template <typename T>
-Stack<Coordinates<T>>* rememberSolution(Stack<Coordinates<T>>* pStack) {
-	Stack<Coordinates<T>>* newStack = new Stack<Coordinates<T>>(25);
-
-	for (int i = 0; i <= pStack->_top; i++) {
-		newStack->push(pStack->_data[i]);
+	//Writing the box into the container
+	for (size_t i = 0; i < pStack->_top; i++) {
+		placeBox(problem, pStack->_data[i].boxPlaced, pStack->_data[i].x, pStack->_data[i].y);
 	}
-	return newStack;
+	
+	problem->printContainer();
 }
 
-template <typename T>
-bool sameSolutions(Stack<Coordinates<T>>* firstStack, Stack<Coordinates<T>>* secondStack) {
-
-	for (int i = 0; i < firstStack->_top; i++) {
-		if (firstStack->_data[i].x != secondStack->_data[i].x || firstStack->_data[i].y != secondStack->_data[i].y || firstStack->_data[i].boxPlaced != secondStack->_data[i].boxPlaced) {
-			return false;
-		}
-	}
-	return true;
-}
-
+/// <summary>
+/// Reads the file, checks each line, writes errors if any, initializes the container array with "0" and allocates boxes.
+/// </summary>
+/// <param name="filename">The name of the file to be read.</param>
+/// <returns>The structure that holds the boxes and the container.</returns>
 PackerProblem* loadPackerProblem(string filename) {
 	PackerProblem* problem = new PackerProblem();
 	ifstream file(filename);
@@ -281,8 +299,19 @@ PackerProblem* loadPackerProblem(string filename) {
 	return problem;
 }
 
+
+/// <summary>
+/// Accepts a poiner to a box and checks if it would collide with any of the already placed boxes. If it collides jumps the coordinates to the edge
+/// of the box that it collided with.
+/// </summary>
+/// <param name="problem">Stucture to hold boxs, container</param>
+/// <param name="pStack">Pointer to the stack</param>
+/// <param name="boxToCheck">Box to be checked</param>
+/// <param name="px">Pointer to x coords now beeing tested</param>
+/// <param name="py">Pointer to x coords now beeing tested</param>
+/// <returns>True, if the box has collided or not.</returns>
 template <typename T>
-bool boxCollided(PackerProblem* problem, Stack<Coordinates<T>>* pStack, box* boxToCheck, T* px, T* py) {
+bool boxCollided(PackerProblem* problem, Stack<Coordinates<T>>* pStack, Box* boxToCheck, T* px, T* py) {
 	int width = boxToCheck->width;
 	int length = boxToCheck->length;
 	int x = *px;
@@ -296,7 +325,7 @@ bool boxCollided(PackerProblem* problem, Stack<Coordinates<T>>* pStack, box* box
 			&& y > pStack->_data[i].y - length
 			&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
 		{
-			//The box has collided - return
+			//The box has collided, jump the coords to the edge of the box
 			*px = pStack->_data[i].x + pStack->_data[i].boxPlaced->width - 1;
 			return true;
 		}
@@ -305,6 +334,11 @@ bool boxCollided(PackerProblem* problem, Stack<Coordinates<T>>* pStack, box* box
 	return false;
 }
 
+/// <summary>
+/// Turns the coordinates and names of the boxes into a string for storage and easier checking if solution already exists.
+/// </summary>
+/// <param name="pStack">Pointer to the stack</param>
+/// <returns>Return pointer to the string.</returns>
 template <typename T>
 string* stringifyStack(Stack<Coordinates<T>>* pStack) {
 	string* s = new string();
@@ -315,6 +349,12 @@ string* stringifyStack(Stack<Coordinates<T>>* pStack) {
 	return s;
 }
 
+/// <summary>
+/// Iterates through the vector containing all the solutions, and checks if the string representing unique solution exists.
+/// </summary>
+/// <param name="solutions">Pointer to the vector of all solutions</param>
+/// <param name="newSolution">Pointer to the string of the solutions.</param>
+/// <returns>Return if the solution has been already found.</returns>
 bool solutionExists(vector<string>* solutions, string* newSolution) {
 
 	vector<string>::iterator it;
@@ -327,187 +367,43 @@ bool solutionExists(vector<string>* solutions, string* newSolution) {
 	return false;
 }
 
-//TODO Delete (Depreciated or under development)
-//bool __boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToCheck, int* px, int* py) {
-//	int width = boxToCheck->width;
-//	int length = boxToCheck->length;
-//	int x = *px;
-//	int y = *py;
-//	//inside the container
-//	if (x + width <= problem->width && y + length <= problem->length) {
-//		//inside the container while rotated and sides are of different length
-//		if (x + length < problem->width && y + width < problem->length && width != length) {
-//			for (size_t i = 0; i < pStack->_top; i++) {
-//				if (x > pStack->_data[i].x - width
-//					&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
-//					&& y > pStack->_data[i].y - length
-//					&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length) {
-//					//still collides while rotated
-//					if (x > pStack->_data[i].x - length
-//						&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
-//						&& y > pStack->_data[i].y - width
-//						&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length) {
-//						*px += pStack->_data[i].boxPlaced->width - 1;
-//						return true;
-//
-//					}
-//					//need to recheck that the rotated box does not collide with any of the boxes
-//					else {
-//						for (size_t j = 0; j < pStack->_top; j++) {
-//							if (x > pStack->_data[i].x - length
-//								&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
-//								&& y > pStack->_data[i].y - width
-//								&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
-//							{
-//								*px += pStack->_data[i].boxPlaced->width - 1;
-//								return true;
-//							}
-//						}
-//						rotateBox(boxToCheck);
-//
-//						return false;
-//					}
-//				}
-//			}
-//			return false;
-//		}
-//		//outside of the container while rotated
-//		else {
-//			//do regular collision detection
-//			for (size_t i = 0; i < pStack->_top; i++) {
-//				if (x > pStack->_data[i].x - width
-//					&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
-//					&& y > pStack->_data[i].y - length
-//					&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
-//				{
-//					*px += pStack->_data[i].boxPlaced->width - 1;
-//					return true;
-//				}
-//			}
-//			//did not collide
-//			return false;
-//		}
-//	}
-//	//outside of the container
-//	else {
-//		//inside the container while rotated
-//		if (x + length <= problem->width && y + width <= problem->length && width != length) {
-//			//colledes with all the boxes while rotated
-//			for (size_t i = 0; i < pStack->_top; i++) {
-//				if (x > pStack->_data[i].x - length
-//					&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
-//					&& y > pStack->_data[i].y - width
-//					&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
-//				{
-//					*px += pStack->_data[i].boxPlaced->width - 1;
-//					return true;
-//				}
-//			}
-//			//did not collide with all of the boxes while rotated
-//			rotateBox(boxToCheck);
-//
-//			return false;
-//		}
-//		//outside of the container even if rotated
-//		else {
-//			return true;
-//		}
-//	}
-//
-//	return true;
-//}
-//bool _boxCollided(PackerProblem* problem, Stack<Coordinates>* pStack, box* boxToCheck, int* px, int* py) {
-//	int width = boxToCheck->width;
-//	int length = boxToCheck->length;
-//	int x = *px;
-//	int y = *py;
-//	for (size_t i = 0; i < pStack->_top; i++) {
-//		if (x > pStack->_data[i].x - width
-//			&& x < pStack->_data[i].x + pStack->_data[i].boxPlaced->width
-//			&& y > pStack->_data[i].y - length
-//			&& y < pStack->_data[i].y + pStack->_data[i].boxPlaced->length)
-//		{	
-//			*px += pStack->_data[i].boxPlaced->width - 1;
-//			return true;
-//		}
-//	}
-//	return false;
-//}
-//void _solveProblem(PackerProblem* problem) {
-//	Stack<Coordinates> stack;
-//
-//	int boxIndex = problem->number_boxes-1;
-//	bool boxPlaced = false;
-//	int x = 0;
-//	int y = 0;
-//	unsigned short length = problem->length;
-//	unsigned short width = problem->width;
-//
-//	while (boxIndex > -1){
-//		box* tmp = &problem->boxes[boxIndex];
-//		for (int i = y; !boxPlaced && i < length; i++) {
-//			for (int j = x; !boxPlaced && j < width; j++) {
-//				if (!__boxCollided(problem, &stack, tmp, &j, &i)) {						
-//					stack.push(Coordinates({ j, i, tmp }));					
-//					boxPlaced = true;
-//					boxIndex--;						
-//				}				
-//			}
-//		}
-//
-//		x = 0;
-//		y = 0;
-//
-//		if (!boxPlaced) {
-//			x = stack.top().x + 1;
-//			y = stack.top().y;		
-//			stack.pop();
-//			boxIndex++;			
-//		}
-//		boxPlaced = false;
-//
-//	}
-//
-//	for (size_t i = 0; i < stack._top; i++) {
-//		
-//		placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
-//
-//	}
-//}
+template <typename T>
+void tryNextPosition(Stack<Coordinates<T>>* pStack, T* x, T* y) {
+	*x = pStack->top().x + 1;
+	*y = pStack->top().y;
+	pStack->pop();
+}
 
+/// <summary>
+/// Uses backtracking to find solutions/solutions.
+/// </summary>
+/// <param name="problem">Structure to hold boxs, container</param>
+/// <param name="solver">Structure to hold the problem structure, number of solutions, and number of steps to solve one solution.</param>
+/// <param name="solveAll">Find just one or all solutions.</param>
+/// <returns>Return if the solution has been already found.</returns>
 template <typename T>
 void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = false) {
 	Stack<Coordinates<T>> stack(problem->number_boxes);
-	//Stack<Coordinates<T>>* firstStack = nullptr;
-	//bool firstSolutionRememberd = false;
+
 	T maxDepth = 0;
 	int boxIndex = problem->number_boxes - 1;
 	bool boxPlaced = false;
 	bool boxRotated = false;
 	T x = 0;
 	T y = 0;
+	//To redice number of requests to length and width of the container
 	T length = problem->length;
 	T width = problem->width;
-	box* currentBox;
-
-	
+	Box* currentBox;
 
 	//Find just one solution
 	if (!solveAll) {
 		while (boxIndex > -1) {
-			//debug. delete later
-			/*cleanContainer(problem);
-
-			for (size_t i = 0; i < stack._top; i++) {
-				placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
-			}
-			problem->printContainer();*/
-
 			solver->steps++;
 			boxPlaced = false;
-
 			currentBox = &problem->boxes[boxIndex];
 
+			//Check the box placemt not(!) up to the edge of the container but to edge minus the width/length of the box.
 			for (T i = y; !boxPlaced && i < length - currentBox->length + 1; i++) {
 				for (T j = x; !boxPlaced && j < width - currentBox->width + 1; j++) {
 					if (!boxCollided<T>(problem, &stack, currentBox, &j, &i)) {
@@ -534,47 +430,39 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 
 			if (!boxPlaced) {
 				if (boxRotated) {
-
 					//"unrotate" the box
 					rotateBox(currentBox);
 					boxRotated = false;
 
-					x = stack.top().x + 1;
-					y = stack.top().y;
-					stack.pop();
+					tryNextPosition(&stack, &x, &y);
 					boxIndex++;
-					if (maxDepth < boxIndex) {
-						maxDepth = boxIndex;
-					}
-
 				}
+				//If the box can be rotated we rotated it
 				else if (!boxRotated && currentBox->length != currentBox->width) {
 					rotateBox(currentBox);
 					boxRotated = true;
 				}
+				//If the sides are the smae, we do not need to rotate
 				else if (currentBox->length == currentBox->width) {
 					if (boxIndex == problem->number_boxes - 1) {
 						x = 0;
 						y = 0;
 					}
 					else {
-						x = stack.top().x + 1;
-						y = stack.top().y;
-						stack.pop();
+						tryNextPosition(&stack, &x, &y);
 						boxIndex++;
 					}
-					if (maxDepth < boxIndex) {
-						maxDepth = boxIndex;
-					}
-
 				}
+				//Remembering the "depth" we reach when placing the boxes. I.e. if we are constantly on the same depth, the algorithm is stuck.
+				if (maxDepth < boxIndex) {
+					maxDepth = boxIndex;
+				}
+
 			}
 		}
 
-		for (size_t i = 0; i < stack._top; i++) {
-			placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
-		}
-		problem->printContainer();
+		showContainer(problem, &stack);
+		solver->finalSolution = stringifyStack(&stack);
 		cout << solver->steps << " steps needed.\n";
 		
 	}
@@ -585,17 +473,9 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 		vector<string> allSolutions;
 
 		while (boxIndex > -1) {
-			//debug. delete later
-			/*cleanContainer(problem);
-
-			for (size_t i = 0; i < stack._top; i++) {
-				placeBox(problem, stack._data[i].boxPlaced, stack._data[i].x, stack._data[i].y);
-			}
-			problem->printContainer();*/
 
 			solver->steps++;
 			boxPlaced = false;
-
 			currentBox = &problem->boxes[boxIndex];
 
 			for (T i = y; !boxPlaced && i < length - currentBox->length + 1; i++) {
@@ -615,58 +495,43 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 			}
 			y = 0;
 
-			//Bug: infinite loop. Possible solution bool rotation in the stack? Biniary sm?
-			/*if (solveAll && !boxPlaced && boxIndex == problem->number_boxes - 1 && boxRotated) {
-				cout << "Found " << solver->numberOfSolutions << " of all of the solutions!\n";
-				break;
-			}
-			else*/
 			if (boxIndex == -1) {
 				string* textStack = stringifyStack(&stack);
 
 				if (solutionExists(&allSolutions, textStack)) {
 					stack._top = problem->number_boxes - maxDepth - 1;
 					if (stack.isEmpty()) {
-						cout << allSolutions.size() << endl;
 						cout << "Found " << solver->numberOfSolutions << " solutions!\n";
-						break;
+						return;
 					}
+					//Poping the box we are stuck on.
 					boxIndex = maxDepth + 1;
 					boxPlaced = true;
-					x = stack.top().x + 1;
-					y = stack.top().y;
-					stack.pop();
+					
+					//Going deeper if the solution exists again
 					maxDepth++;
 				}
 				else {
 					solver->numberOfSolutions++;
-					//cout << "Found solution number " << solver->numberOfSolutions << ": \n";
+					cout << "Found solution number " << solver->numberOfSolutions << ": \n";
 					allSolutions.push_back(*textStack);
-					x = stack.top().x + 1;
-					y = stack.top().y;
-					stack.pop();
 					boxIndex++;
 					maxDepth = 0;
 				}
+				//Regardless if the solution exists or we found it, we need to backtrack to previous box and move it further
+				tryNextPosition(&stack, &x, &y);
 
 			}
 
 
 			if (!boxPlaced) {
 				if (boxRotated) {
-
 					//"unrotate" the box
 					rotateBox(currentBox);
 					boxRotated = false;
 
-					x = stack.top().x + 1;
-					y = stack.top().y;
-					stack.pop();
+					tryNextPosition(&stack, &x, &y);
 					boxIndex++;
-					if (maxDepth < boxIndex) {
-						maxDepth = boxIndex;
-					}
-
 				}
 				else if (!boxRotated && currentBox->length != currentBox->width) {
 					rotateBox(currentBox);
@@ -678,14 +543,13 @@ void solveProblem(PackerProblem* problem, PackerSolver* solver, bool solveAll = 
 						y = 0;
 					}
 					else {
-						x = stack.top().x + 1;
-						y = stack.top().y;
-						stack.pop();
+						tryNextPosition(&stack, &x, &y);
 						boxIndex++;
 					}
-					if (maxDepth < boxIndex) {
-						maxDepth = boxIndex;
-					}
+				}
+				//Remembering the "depth" we reach when placing the boxes. I.e. if we are constantly on the same depth, the algorithm is stuck.
+				if (maxDepth < boxIndex) {
+					maxDepth = boxIndex;
 				}
 			}
 		}
@@ -701,14 +565,13 @@ int main() {
 	if (true) {
 		PackerSolver* pSolver = new PackerSolver();
 
-		pSolver->pProblem = loadPackerProblem("3input.txt");
-
-		QuickSort<box>(pSolver->pProblem->boxes, 0, pSolver->pProblem->number_boxes);
+		pSolver->pProblem = loadPackerProblem("input.txt");
 
 		high_resolution_clock::time_point start, finish;
 		duration<double> duration;
 		start = high_resolution_clock::now();
 
+		QuickSort<Box>(pSolver->pProblem->boxes, 0, pSolver->pProblem->number_boxes);
 		solveProblem<unsigned short>(pSolver->pProblem, pSolver, true);
 
 		finish = high_resolution_clock::now();
@@ -726,7 +589,7 @@ int main() {
 
 		pSolver->pProblem = loadPackerProblem("1input.txt");
 
-		QuickSort<box>(pSolver->pProblem->boxes, 0, pSolver->pProblem->number_boxes);
+		QuickSort<Box>(pSolver->pProblem->boxes, 0, pSolver->pProblem->number_boxes);
 
 
 		high_resolution_clock::time_point start, finish;
